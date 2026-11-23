@@ -2,9 +2,7 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 
-from src.common.constants import WHO_BIS_STANDARDS
 from src.ml.features import DomainFeatureEngineer
 
 

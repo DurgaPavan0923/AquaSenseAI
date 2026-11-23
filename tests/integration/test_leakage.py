@@ -2,10 +2,9 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from src.data.loader import generate_benchmark_dataset, split_and_save_data
-from src.ml.preprocessor import build_preprocessor, get_cv_splitter
+from src.ml.preprocessor import build_preprocessor
 
 
 def test_zero_leakage_between_train_and_test():
@@ -30,7 +29,7 @@ def test_preprocessor_does_not_leak_test_statistics():
         "pH", "Turbidity", "Temperature", "Dissolved Oxygen",
         "Biochemical Oxygen Demand", "Lead", "Mercury", "Arsenic"
     ]
-    
+
     # Train set with low values
     train_data = pd.DataFrame({col: [1.0, 2.0, 3.0] for col in numerical_cols})
     # Test set with extreme values

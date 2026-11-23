@@ -1,14 +1,11 @@
 """Pytest fixtures for unit and integration testing."""
 
-import pytest
-import numpy as np
 import pandas as pd
+import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from src.database.models import Base
-from src.ml.features import DomainFeatureEngineer
-from src.ml.preprocessor import build_preprocessor
 
 
 @pytest.fixture

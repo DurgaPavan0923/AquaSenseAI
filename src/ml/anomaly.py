@@ -1,12 +1,12 @@
 """Dual-tier anomaly detection: physical sensor-fault heuristics plus unsupervised Isolation Forest."""
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
+
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import IsolationForest
 
 from src.common.config import yaml_config
-from src.common.constants import SEVERITY_LEVELS, WHO_BIS_STANDARDS
 from src.common.logger import logger
 
 
@@ -32,7 +32,7 @@ class AnomalyEngine:
             data = df_feats.to_numpy()
         else:
             data = X
-        
+
         self.isolation_forest.fit(data)
         self.is_fitted = True
         logger.info("Isolation Forest fitted successfully", n_samples=len(data))
@@ -40,9 +40,9 @@ class AnomalyEngine:
 
     def check_deterministic_rules(
         self,
-        sample: Dict[str, float],
-        previous_sample: Optional[Dict[str, float]] = None
-    ) -> Tuple[bool, List[str], str]:
+        sample: dict[str, float],
+        previous_sample: dict[str, float] | None = None
+    ) -> tuple[bool, list[str], str]:
         """Checks for hardware sensor faults, impossible physics, and immediate toxic spikes.
         
         Returns:
@@ -104,9 +104,9 @@ class AnomalyEngine:
 
     def score_sample(
         self,
-        sample: Dict[str, float],
-        previous_sample: Optional[Dict[str, float]] = None
-    ) -> Dict[str, Any]:
+        sample: dict[str, float],
+        previous_sample: dict[str, float] | None = None
+    ) -> dict[str, Any]:
         """Runs complete dual-tier anomaly audit on a single sample."""
         # Tier 1: Rules
         has_fault, violations, rule_severity = self.check_deterministic_rules(sample, previous_sample)
@@ -124,7 +124,7 @@ class AnomalyEngine:
 
         # Compound Decision
         is_anomaly = has_fault or is_if_outlier
-        
+
         # Determine aggregate severity
         if rule_severity == "CRITICAL" or (is_if_outlier and raw_score < -0.20):
             aggregate_severity = "CRITICAL"

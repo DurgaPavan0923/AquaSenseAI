@@ -1,30 +1,29 @@
 """Model training, hyperparameter optimization, probability calibration, and experiment tracking."""
 
 import json
-import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
+
 import joblib
 import numpy as np
 import pandas as pd
+import xgboost as xgb
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import f1_score, accuracy_score, brier_score_loss, log_loss
-from sklearn.model_selection import RandomizedSearchCV, train_test_split
+from sklearn.metrics import accuracy_score, f1_score
+from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
-import xgboost as xgb
 
 from src.common.config import yaml_config
 from src.common.logger import logger
 from src.data.loader import load_dataset, split_and_save_data
-from src.ml.features import DomainFeatureEngineer
 from src.ml.preprocessor import build_preprocessor, get_cv_splitter
 
 
-def get_model_candidates(seed: int = 42) -> Dict[str, Any]:
+def get_model_candidates(seed: int = 42) -> dict[str, Any]:
     """Returns candidate estimators spanning baselines and advanced tree ensembles."""
     models = {
         "dummy_majority": DummyClassifier(strategy="most_frequent"),
@@ -76,8 +75,8 @@ def cross_validate_model(
     X: pd.DataFrame,
     y: pd.Series,
     splitter: Any,
-    numerical_cols: List[str]
-) -> Dict[str, Any]:
+    numerical_cols: list[str]
+) -> dict[str, Any]:
     """Runs leakage-safe K-Fold cross-validation on a model candidate."""
     fold_f1_macros = []
     fold_accuracies = []
@@ -113,8 +112,8 @@ def cross_validate_model(
 def train_and_calibrate_active_model(
     train_df: pd.DataFrame,
     test_df: pd.DataFrame,
-    config: Optional[dict] = None
-) -> Tuple[Pipeline, Dict[str, Any], np.ndarray]:
+    config: dict | None = None
+) -> tuple[Pipeline, dict[str, Any], np.ndarray]:
     """Trains final model candidate, applies Platt probability calibration, and calculates conformal scores."""
     cfg = config or yaml_config
     seed = cfg["project"]["random_seed"]
@@ -184,7 +183,7 @@ def train_and_calibrate_active_model(
         "fit_sample_count": len(y_fit),
         "calibration_sample_count": len(y_calib),
         "test_sample_count": len(y_test),
-        "trained_at": datetime.now(timezone.utc).isoformat()
+        "trained_at": datetime.now(UTC).isoformat()
     }
 
     # 3. Artifact Serialization

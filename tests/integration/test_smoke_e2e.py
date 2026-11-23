@@ -1,8 +1,5 @@
 """End-to-End smoke test verifying complete pipeline integration."""
 
-import numpy as np
-import pandas as pd
-import pytest
 
 from src.data.loader import generate_benchmark_dataset
 from src.ml.anomaly import AnomalyEngine

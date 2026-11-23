@@ -1,10 +1,10 @@
 """Model regression testing enforcing statistical and predictive performance floors."""
 
 from pathlib import Path
+
 import joblib
 import numpy as np
 import pandas as pd
-import pytest
 from sklearn.metrics import accuracy_score, f1_score
 
 from src.common.config import yaml_config

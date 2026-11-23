@@ -1,6 +1,5 @@
 """AquaSense AI - Virtual IoT Sensor Telemetry & Fault Injection Simulator."""
 
-import time
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -45,7 +44,7 @@ def generate_telemetry_tick(mode: str) -> dict:
         "Mercury": round(float(np.random.exponential(0.0002)), 5),
         "Arsenic": round(float(np.random.exponential(0.002)), 4)
     }
-    
+
     if mode == "Chemical Contamination Plume":
         base["pH"] = round(float(np.random.normal(5.4, 0.3)), 2)
         base["Turbidity"] = round(float(np.random.normal(35.0, 5.0)), 1)

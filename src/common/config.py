@@ -2,7 +2,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import yaml
 from pydantic import BaseModel, Field
@@ -18,8 +18,8 @@ class NumericalFeatureConfig(BaseModel):
 
 
 class FeaturesConfig(BaseModel):
-    numerical: List[NumericalFeatureConfig]
-    optional_identifiers: List[str] = Field(default_factory=list)
+    numerical: list[NumericalFeatureConfig]
+    optional_identifiers: list[str] = Field(default_factory=list)
 
 
 class SplitConfig(BaseModel):
@@ -36,7 +36,7 @@ class AppConfig(BaseSettings):
     aquasense_env: str = Field(default="development", alias="AQUASENSE_ENV")
     api_host: str = Field(default="0.0.0.0", alias="API_HOST")
     api_port: int = Field(default=8000, alias="API_PORT")
-    api_key: Optional[str] = Field(default="aquasense-dev-secret-key-2026", alias="API_KEY")
+    api_key: str | None = Field(default="aquasense-dev-secret-key-2026", alias="API_KEY")
     database_url: str = Field(default="sqlite:///./aquasense.db", alias="DATABASE_URL")
     model_dir: str = Field(default="artifacts/models/xgboost_active", alias="MODEL_DIR")
     config_path: str = Field(default="config/config.yaml", alias="CONFIG_PATH")
@@ -52,7 +52,7 @@ class AppConfig(BaseSettings):
 
 
 
-def load_yaml_config(path: str = "config/config.yaml") -> Dict[str, Any]:
+def load_yaml_config(path: str = "config/config.yaml") -> dict[str, Any]:
     """Loads raw YAML configuration dictionary."""
     config_file = Path(path)
     if not config_file.exists():
@@ -62,7 +62,7 @@ def load_yaml_config(path: str = "config/config.yaml") -> Dict[str, Any]:
     if not config_file.exists():
         raise FileNotFoundError(f"Configuration file not found at: {path}")
 
-    with open(config_file, "r", encoding="utf-8") as f:
+    with open(config_file, encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 

@@ -2,11 +2,12 @@
 
 import json
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
+
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -16,7 +17,7 @@ from src.common.logger import logger
 from src.data.loader import load_dataset
 
 
-def run_eda(df: pd.DataFrame, output_dir: str = "reports") -> Dict[str, Any]:
+def run_eda(df: pd.DataFrame, output_dir: str = "reports") -> dict[str, Any]:
     """Generates figures and data quality metrics from the dataset."""
     reports_path = Path(output_dir)
     figures_path = reports_path / "figures"
@@ -29,11 +30,11 @@ def run_eda(df: pd.DataFrame, output_dir: str = "reports") -> Dict[str, Any]:
     total_rows = len(df)
     missing_counts = df.isnull().sum().to_dict()
     duplicates_count = int(df.duplicated().sum())
-    
+
     # 2. Class Balance
     class_counts = df[target_col].value_counts().to_dict() if target_col in df.columns else {}
     class_proportions = (df[target_col].value_counts(normalize=True)).to_dict() if target_col in df.columns else {}
-    
+
     # 3. Descriptive Stats
     summary_stats = df[numerical_cols].describe().to_dict()
 

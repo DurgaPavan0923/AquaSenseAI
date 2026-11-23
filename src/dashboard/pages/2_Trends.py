@@ -1,13 +1,14 @@
 """AquaSense AI - Spatiotemporal Trends & Water Quality Dynamics."""
 
 import os
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import requests
 import streamlit as st
 
-from src.common.constants import STATUTORY_DISCLAIMER, WHO_BIS_STANDARDS
+from src.common.constants import STATUTORY_DISCLAIMER
 
 st.set_page_config(page_title="Trends | AquaSense AI", page_icon="📈", layout="wide")
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
@@ -27,7 +28,7 @@ def load_trend_data():
             return df.sort_values(by="recorded_at")
     except Exception:
         pass
-    
+
     from src.data.loader import generate_benchmark_dataset
     df = generate_benchmark_dataset(n_samples=150)
     df["recorded_at"] = pd.date_range(end=pd.Timestamp.now(), periods=150, freq="h")

@@ -1,6 +1,6 @@
 """Domain-guided feature engineering based on WHO and BIS IS 10500:2012 guidelines."""
 
-from typing import List, Optional
+
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -13,8 +13,8 @@ class DomainFeatureEngineer(BaseEstimator, TransformerMixin):
 
     def __init__(self, epsilon: float = 1e-5):
         self.epsilon = epsilon
-        self.feature_names_in_: Optional[List[str]] = None
-        self.engineered_feature_names_: List[str] = [
+        self.feature_names_in_: list[str] | None = None
+        self.engineered_feature_names_: list[str] = [
             "OSDR",                     # Oxygen Saturation Deficit Ratio: BOD / (DO + eps)
             "HMHI",                     # Heavy Metal Hazard Index: normalized sum of Pb, Hg, As
             "pH_Neutrality_Deviation",   # |pH - 7.0|
@@ -22,7 +22,7 @@ class DomainFeatureEngineer(BaseEstimator, TransformerMixin):
             "Toxic_Breach_Count"        # Count of statutory limit exceedances
         ]
 
-    def fit(self, X: pd.DataFrame | np.ndarray, y: Optional[pd.Series | np.ndarray] = None) -> "DomainFeatureEngineer":
+    def fit(self, X: pd.DataFrame | np.ndarray, y: pd.Series | np.ndarray | None = None) -> "DomainFeatureEngineer":
         """Fits transformer and registers feature names."""
         if isinstance(X, pd.DataFrame):
             self.feature_names_in_ = list(X.columns)
@@ -81,7 +81,7 @@ class DomainFeatureEngineer(BaseEstimator, TransformerMixin):
 
         return df
 
-    def get_feature_names_out(self, input_features: Optional[List[str]] = None) -> np.ndarray:
+    def get_feature_names_out(self, input_features: list[str] | None = None) -> np.ndarray:
         """Returns complete list of feature names including engineered metrics."""
         base_features = list(input_features) if input_features is not None else (self.feature_names_in_ or [])
         return np.array(base_features + self.engineered_feature_names_)

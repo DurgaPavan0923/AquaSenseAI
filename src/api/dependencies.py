@@ -1,14 +1,14 @@
 """FastAPI dependency injection, security authentication, and service caching."""
 
 import hashlib
-import os
 import secrets
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Optional
+
 import joblib
 import numpy as np
 import pandas as pd
-from fastapi import Header, HTTPException, Security, status
+from fastapi import Header, HTTPException, status
 
 from src.common.config import settings, yaml_config
 from src.common.logger import logger
@@ -28,14 +28,14 @@ def compute_file_sha256(filepath: Path) -> str:
 
 class ModelServicesContainer:
     """Singleton container managing pre-loaded ML models and explainers."""
-    
+
     _instance: Optional["ModelServicesContainer"] = None
 
     def __init__(self):
-        self.model: Optional[Any] = None
-        self.conformal_predictor: Optional[ConformalPredictor] = None
-        self.explainer: Optional[WaterQualityExplainer] = None
-        self.anomaly_engine: Optional[AnomalyEngine] = None
+        self.model: Any | None = None
+        self.conformal_predictor: ConformalPredictor | None = None
+        self.explainer: WaterQualityExplainer | None = None
+        self.anomaly_engine: AnomalyEngine | None = None
         self.is_ready: bool = False
 
     @classmethod
@@ -97,7 +97,7 @@ class ModelServicesContainer:
         logger.info("All inference and explainability engines successfully loaded into memory")
 
 
-def verify_api_key(x_api_key: Optional[str] = Header(None)) -> Optional[str]:
+def verify_api_key(x_api_key: str | None = Header(None)) -> str | None:
     """Enforces constant-time API Key authentication."""
     expected_key = settings.api_key
     # In production, API Key is strictly required

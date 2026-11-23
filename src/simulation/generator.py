@@ -2,8 +2,8 @@
 
 import argparse
 import time
-from datetime import datetime
-from typing import Dict, Generator
+from collections.abc import Generator
+
 import numpy as np
 import requests
 
@@ -15,14 +15,14 @@ def generate_telemetry_stream(
     probe_id: str = "PROBE_EDGE_101",
     inject_drift: bool = False,
     inject_fault_every: int = 20
-) -> Generator[Dict, None, None]:
+) -> Generator[dict, None, None]:
     """Generates continuous realistic aquatic telemetry."""
     tick = 0
     drift_ph = 0.0
 
     while True:
         tick += 1
-        
+
         # Nominal physical parameters
         ph = 7.35 + np.random.normal(0, 0.08) + drift_ph
         turbidity = max(0.2, np.random.exponential(1.2))
@@ -74,7 +74,7 @@ def run_streamer(api_url: str = "http://localhost:8000/api/v1/predict", interval
     """Streams generated packets to the target FastAPI endpoint."""
     logger.info("Starting IoT edge probe simulator", api_url=api_url, interval=interval, count=count)
     stream = generate_telemetry_stream()
-    
+
     sent = 0
     for packet in stream:
         sent += 1

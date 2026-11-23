@@ -1,14 +1,12 @@
 """AquaSense AI Core FastAPI Application and Endpoint Routers."""
 
 import io
-import json
 import os
-import re
 import sys
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 # Ensure project root is in sys.path for serverless runtimes (Vercel / AWS Lambda)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -17,10 +15,8 @@ if str(PROJECT_ROOT) not in sys.path:
 
 import numpy as np
 import pandas as pd
-from fastapi import Depends, FastAPI, File, HTTPException, Request, Response, UploadFile, status
-
+from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
@@ -35,11 +31,11 @@ from src.api.schemas import (
     SingleInferenceResponse,
     WaterFeaturesPayload,
 )
-from src.common.config import settings, yaml_config
+from src.common.config import yaml_config
 from src.common.constants import STATUTORY_DISCLAIMER, TARGET_CLASS_MAPPING, WHO_BIS_STANDARDS
 from src.common.logger import logger
 from src.database.connection import get_db, init_db
-from src.database.models import Alert, ModelRecord, Prediction, Sample
+from src.database.models import ModelRecord, Sample
 from src.database.repository import WaterQualityRepository
 
 # Rate Limiter
@@ -141,7 +137,7 @@ def predict_single_sample(
     request: Request,
     payload: SingleInferenceRequest,
     db: Session = Depends(get_db),
-    api_key: Optional[str] = Depends(verify_api_key)
+    api_key: str | None = Depends(verify_api_key)
 ):
     """Screens single water sample: predicts risk tier, calibrated probabilities, conformal set, and SHAP drivers."""
     container = ModelServicesContainer.get_instance()
@@ -227,7 +223,7 @@ def predict_single_sample(
     return SingleInferenceResponse(
         sample_id=sample_record.id,
         location_id=payload.location_id,
-        recorded_at=datetime.now(timezone.utc).isoformat(),
+        recorded_at=datetime.now(UTC).isoformat(),
         prediction=inference_dict["prediction"],
         anomaly=anomaly_result,
         explainability={
@@ -251,7 +247,7 @@ async def predict_batch_csv(
     request: Request,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    api_key: Optional[str] = Depends(verify_api_key)
+    api_key: str | None = Depends(verify_api_key)
 ):
     """Processes uploaded CSV: validates columns, runs batch inferences, conformal sets, and returns preview."""
     # Enforce 10MB limit
@@ -293,7 +289,7 @@ async def predict_batch_csv(
     for i in range(len(df)):
         c_label = TARGET_CLASS_MAPPING[preds[i]]
         risk_counts[c_label] += 1
-        
+
         sample_dict = df.iloc[i].to_dict()
         anom_res = container.anomaly_engine.score_sample(sample_dict) if container.anomaly_engine else {"is_anomaly": False}
         if anom_res.get("is_anomaly"):

@@ -1,13 +1,12 @@
 """Data validation schemas and range assertions using Pydantic v2."""
 
-from typing import Any, Dict, List, Optional, Tuple
 import pandas as pd
 from pydantic import BaseModel, Field, field_validator
 
 
 class WaterSampleInput(BaseModel):
     """Pydantic model validating physical ranges and boundaries for a single water sample."""
-    
+
     ph: float = Field(..., alias="pH", ge=0.0, le=14.0, description="pH level (0.0 to 14.0)")
     turbidity: float = Field(..., alias="Turbidity", ge=0.0, le=500.0, description="Turbidity in NTU")
     temperature: float = Field(..., alias="Temperature", ge=-5.0, le=60.0, description="Water temperature in °C")
@@ -16,11 +15,11 @@ class WaterSampleInput(BaseModel):
     lead: float = Field(..., alias="Lead", ge=0.0, le=5.0, description="Lead in mg/L")
     mercury: float = Field(..., alias="Mercury", ge=0.0, le=1.0, description="Mercury in mg/L")
     arsenic: float = Field(..., alias="Arsenic", ge=0.0, le=5.0, description="Arsenic in mg/L")
-    
+
     # Optional metadata
-    sample_id: Optional[str] = Field(default=None, alias="Sample_ID")
-    location_id: Optional[str] = Field(default="STATION_MAIN", alias="Location_ID")
-    timestamp: Optional[str] = Field(default=None, alias="Timestamp")
+    sample_id: str | None = Field(default=None, alias="Sample_ID")
+    location_id: str | None = Field(default="STATION_MAIN", alias="Location_ID")
+    timestamp: str | None = Field(default=None, alias="Timestamp")
 
     model_config = {
         "populate_by_name": True,
@@ -46,29 +45,29 @@ class WaterSampleInput(BaseModel):
         return round(v, 4)
 
 
-def validate_dataframe(df: pd.DataFrame, expected_features: List[str]) -> Tuple[bool, List[str]]:
+def validate_dataframe(df: pd.DataFrame, expected_features: list[str]) -> tuple[bool, list[str]]:
     """Validates an entire pandas DataFrame against required columns, nulls, and boundary conditions.
     
     Returns:
         (is_valid, list_of_error_messages)
     """
-    errors: List[str] = []
-    
+    errors: list[str] = []
+
     # 1. Check for empty dataframe
     if df.empty:
         return False, ["DataFrame is completely empty."]
-    
+
     # 2. Check for missing columns
     missing_cols = [col for col in expected_features if col not in df.columns]
     if missing_cols:
         errors.append(f"Missing required feature columns: {missing_cols}")
         return False, errors
-    
+
     # 3. Check for severe all-null rows
     null_rows = df[expected_features].isnull().all(axis=1)
     if null_rows.any():
         errors.append(f"Found {null_rows.sum()} rows where all feature values are null.")
-    
+
     # 4. Check boundaries per feature
     range_bounds = {
         "pH": (0.0, 14.0),
@@ -80,7 +79,7 @@ def validate_dataframe(df: pd.DataFrame, expected_features: List[str]) -> Tuple[
         "Mercury": (0.0, 1.0),
         "Arsenic": (0.0, 5.0),
     }
-    
+
     for feat, (lower, upper) in range_bounds.items():
         if feat in df.columns:
             invalid_lower = (df[feat] < lower).sum()
@@ -89,5 +88,5 @@ def validate_dataframe(df: pd.DataFrame, expected_features: List[str]) -> Tuple[
                 errors.append(f"Column '{feat}' has {invalid_lower} values below physical limit ({lower}).")
             if invalid_upper > 0:
                 errors.append(f"Column '{feat}' has {invalid_upper} values above physical limit ({upper}).")
-                
+
     return len(errors) == 0, errors

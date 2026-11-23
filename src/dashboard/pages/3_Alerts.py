@@ -1,6 +1,7 @@
 """AquaSense AI - Active Incident Triage & Alerts Management."""
 
 import os
+
 import pandas as pd
 import requests
 import streamlit as st
@@ -23,7 +24,7 @@ def fetch_all_alerts():
             return pd.DataFrame(res.json())
     except Exception:
         pass
-    
+
     # Mock alerts for UI if empty
     return pd.DataFrame([
         {
@@ -100,7 +101,7 @@ else:
         sev = row["severity"]
         color = "#d62728" if sev == "CRITICAL" else "#ff7f0e" if sev == "HIGH" else "#1f77b4"
         is_ack = row["is_acknowledged"]
-        
+
         col_text, col_btn = st.columns([5, 1])
         with col_text:
             st.markdown(

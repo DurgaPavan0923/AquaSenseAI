@@ -2,14 +2,13 @@
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
-import joblib
+from typing import Any
+
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
-from sklearn.model_selection import GroupKFold, KFold, StratifiedKFold, TimeSeriesSplit
+from sklearn.model_selection import GroupKFold, StratifiedKFold, TimeSeriesSplit
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import RobustScaler
 
@@ -23,16 +22,16 @@ class PreprocessingAuditLogger(BaseEstimator, TransformerMixin):
 
     def __init__(self, report_path: str = "reports/preprocessing_report.json"):
         self.report_path = report_path
-        self.audit_summary_: Dict[str, Any] = {}
+        self.audit_summary_: dict[str, Any] = {}
 
-    def fit(self, X: pd.DataFrame | np.ndarray, y: Optional[Any] = None) -> "PreprocessingAuditLogger":
+    def fit(self, X: pd.DataFrame | np.ndarray, y: Any | None = None) -> "PreprocessingAuditLogger":
         if isinstance(X, pd.DataFrame):
             df = X
         else:
             df = pd.DataFrame(X)
 
         missing_per_col = df.isnull().sum().to_dict()
-        
+
         # Outlier counts via IQR: Q1 - 1.5*IQR or Q3 + 1.5*IQR
         outlier_counts = {}
         for col in df.select_dtypes(include=[np.number]).columns:
@@ -68,7 +67,7 @@ class PreprocessingAuditLogger(BaseEstimator, TransformerMixin):
         return X
 
 
-def build_preprocessor(numerical_features: List[str]) -> Pipeline:
+def build_preprocessor(numerical_features: list[str]) -> Pipeline:
     """Builds a leakage-safe scikit-learn Pipeline with feature engineering, imputation, and scaling."""
     pipeline = Pipeline([
         ("audit", PreprocessingAuditLogger()),
@@ -79,7 +78,7 @@ def build_preprocessor(numerical_features: List[str]) -> Pipeline:
     return pipeline
 
 
-def get_cv_splitter(config: Optional[dict] = None) -> Any:
+def get_cv_splitter(config: dict | None = None) -> Any:
     """Instantiates the leakage-safe cross-validation splitter defined in configuration."""
     cfg = config or yaml_config
     split_cfg = cfg["split"]

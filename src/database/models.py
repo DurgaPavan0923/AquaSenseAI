@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import datetime
-from typing import Optional
+
 from sqlalchemy import (
     Boolean,
     Column,
@@ -61,7 +61,7 @@ class Sample(Base):
     location_id = Column(String(50), nullable=False, default="STATION_01", index=True)
     sensor_id = Column(String(50), nullable=False, default="SENSOR_MAIN")
     source_type = Column(String(20), nullable=False, default="iot_stream")  # iot_stream | manual_lab | batch_upload
-    
+
     # Raw feature measurements
     ph = Column(Float, nullable=False)
     turbidity = Column(Float, nullable=False)
@@ -83,7 +83,7 @@ class Prediction(Base):
     id = Column(String(36), primary_key=True, default=generate_uuid)
     sample_id = Column(String(36), ForeignKey("samples.id", ondelete="CASCADE"), unique=True, nullable=False)
     model_id = Column(String(36), ForeignKey("models.id"), nullable=False)
-    
+
     predicted_class = Column(Integer, nullable=False)
     predicted_label = Column(String(20), nullable=False)
     confidence_score = Column(Float, nullable=False)

@@ -1,11 +1,11 @@
 """Data Access Object (DAO) repository implementing transactional persistence."""
 
 import json
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime
+from typing import Any
+
 from sqlalchemy.orm import Session
 
-from src.common.logger import logger
 from src.database.models import Alert, Explanation, ModelRecord, Prediction, Sample
 
 
@@ -34,11 +34,11 @@ class WaterQualityRepository:
 
     def save_sample_and_inference(
         self,
-        sample_data: Dict[str, Any],
-        inference_result: Dict[str, Any],
-        explainability_result: Optional[Dict[str, Any]] = None,
-        anomaly_result: Optional[Dict[str, Any]] = None,
-        model_id: Optional[str] = None
+        sample_data: dict[str, Any],
+        inference_result: dict[str, Any],
+        explainability_result: dict[str, Any] | None = None,
+        anomaly_result: dict[str, Any] | None = None,
+        model_id: str | None = None
     ) -> Sample:
         """Atomically saves sample, prediction record, SHAP explanations, and generated alerts."""
         if not model_id:
@@ -120,23 +120,23 @@ class WaterQualityRepository:
         self.db.refresh(sample)
         return sample
 
-    def get_recent_samples(self, limit: int = 50) -> List[Sample]:
+    def get_recent_samples(self, limit: int = 50) -> list[Sample]:
         """Fetches recent samples ordered by timestamp descending."""
         return self.db.query(Sample).order_by(Sample.recorded_at.desc()).limit(limit).all()
 
-    def get_alerts(self, unacknowledged_only: bool = False, limit: int = 100) -> List[Alert]:
+    def get_alerts(self, unacknowledged_only: bool = False, limit: int = 100) -> list[Alert]:
         """Fetches system alerts with optional acknowledgment filter."""
         query = self.db.query(Alert)
         if unacknowledged_only:
             query = query.filter(Alert.is_acknowledged == False)
         return query.order_by(Alert.created_at.desc()).limit(limit).all()
 
-    def acknowledge_alert(self, alert_id: str, username: Optional[str] = None) -> Optional[Alert]:
+    def acknowledge_alert(self, alert_id: str, username: str | None = None) -> Alert | None:
         """Acknowledges an existing alert."""
         alert = self.db.query(Alert).filter(Alert.id == alert_id).first()
         if alert:
             alert.is_acknowledged = True
-            alert.acknowledged_at = datetime.now(timezone.utc)
+            alert.acknowledged_at = datetime.now(UTC)
             self.db.commit()
             self.db.refresh(alert)
         return alert

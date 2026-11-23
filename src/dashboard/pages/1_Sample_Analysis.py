@@ -1,13 +1,13 @@
 """AquaSense AI - Interactive Sample Analysis & Local SHAP Explainability."""
 
 import os
+
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 import requests
 import streamlit as st
 
-from src.common.constants import STATUTORY_DISCLAIMER, WHO_BIS_STANDARDS
+from src.common.constants import STATUTORY_DISCLAIMER
 
 st.set_page_config(page_title="Sample Analysis | AquaSense AI", page_icon="🔬", layout="wide")
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
@@ -23,7 +23,7 @@ with col_input:
     st.subheader("1. Physicochemical Telemetry Inputs")
     with st.form("sample_inference_form"):
         station = st.selectbox("Monitoring Station", ["STATION_RIVER_NORTH_01", "STATION_LAKE_SOUTH_02", "STATION_INDUSTRIAL_03"])
-        
+
         c1, c2 = st.columns(2)
         with c1:
             ph = st.slider("pH Level", 0.0, 14.0, 6.8, 0.05, help="WHO/BIS Desirable: 6.5 - 8.5")
@@ -47,7 +47,7 @@ with col_input:
 
 with col_output:
     st.subheader("2. Algorithmic Risk Triage & Uncertainty")
-    
+
     payload = {
         "location_id": station,
         "sensor_id": "WEB_UI_PROBE",
@@ -81,7 +81,7 @@ with col_output:
             container = ModelServicesContainer.get_instance()
             if not container.is_ready:
                 container.load_services()
-            
+
             df_sample = pd.DataFrame([payload["features"]])
             probs = container.model.predict_proba(df_sample)[0]
             pred_class = int(probs.argmax())

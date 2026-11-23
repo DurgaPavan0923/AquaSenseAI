@@ -1,8 +1,7 @@
 """Dataset loader with Kaggle API download, local CSV support, and synthetic benchmark generation."""
 
-import os
 from pathlib import Path
-from typing import Optional, Tuple
+
 import numpy as np
 import pandas as pd
 
@@ -15,10 +14,10 @@ def generate_benchmark_dataset(n_samples: int = 1000, seed: int = 42) -> pd.Data
     """Generates a realistic benchmark water quality dataset conforming to the ziya07 Kaggle dataset schema
     with realistic environmental covariance, measurement noise, and natural boundary overlaps."""
     np.random.seed(seed)
-    
+
     # 1. Base Class Assignment (Imbalanced: 55% Good, 20% Moderate, 25% Polluted)
     labels = np.random.choice([0, 1, 2], size=n_samples, p=[0.55, 0.20, 0.25])
-    
+
     # 2. Realistic Physics-guided distributions with continuous overlaps and measurement noise
     ph = []
     turbidity = []
@@ -28,13 +27,13 @@ def generate_benchmark_dataset(n_samples: int = 1000, seed: int = 42) -> pd.Data
     lead = []
     mercury = []
     arsenic = []
-    
+
     for label in labels:
         # Inject ambient seasonal water temperature
         temp_val = np.random.normal(22.0, 3.5)
         # Oxygen solubility decreases with higher temperature
         do_sat = max(4.0, 14.6 - 0.3 * temp_val)
-        
+
         if label == 0:  # Good (Potable / Clean ecosystem)
             p = np.clip(np.random.normal(7.3, 0.4), 6.2, 8.6)
             turb = np.clip(np.random.exponential(1.5), 0.2, 7.0)
@@ -70,7 +69,7 @@ def generate_benchmark_dataset(n_samples: int = 1000, seed: int = 42) -> pd.Data
         lead.append(pb)
         mercury.append(hg)
         arsenic.append(as_val)
-            
+
     df = pd.DataFrame({
         "Sample_ID": [f"WQS_{i+1:04d}" for i in range(n_samples)],
         "pH": np.round(ph, 3),
@@ -101,7 +100,7 @@ def download_from_kaggle(slug: str, output_path: Path) -> bool:
         return False
 
 
-def load_dataset(config: Optional[dict] = None) -> pd.DataFrame:
+def load_dataset(config: dict | None = None) -> pd.DataFrame:
     """Loads dataset from local CSV, Kaggle API, or falls back to synthetic benchmark generation."""
     cfg = config or yaml_config
     local_path = Path(cfg["dataset"]["local_raw_path"])
@@ -112,7 +111,7 @@ def load_dataset(config: Optional[dict] = None) -> pd.DataFrame:
             local_path = candidate
     slug = cfg["dataset"]["kaggle_dataset_slug"]
 
-    
+
     # 1. Check if local CSV already exists
     if local_path.exists():
         logger.info("Loading existing dataset from local file", path=str(local_path))
@@ -136,20 +135,20 @@ def load_dataset(config: Optional[dict] = None) -> pd.DataFrame:
     if not is_valid:
         logger.error("Dataset validation failed", errors=errors)
         raise ValueError(f"Dataset failed schema validation: {errors}")
-        
+
     logger.info("Dataset schema validated successfully", rows=len(df), cols=list(df.columns))
     return df
 
 
-def split_and_save_data(df: pd.DataFrame, config: Optional[dict] = None) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def split_and_save_data(df: pd.DataFrame, config: dict | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Splits dataset into leakage-safe train/test partitions and saves to disk."""
     from sklearn.model_selection import train_test_split
-    
+
     cfg = config or yaml_config
     test_size = cfg["split"]["test_size"]
     seed = cfg["split"]["random_state"]
     target_col = cfg["target"]["name"]
-    
+
     train_df, test_df = train_test_split(
         df,
         test_size=test_size,
@@ -157,14 +156,14 @@ def split_and_save_data(df: pd.DataFrame, config: Optional[dict] = None) -> Tupl
         random_state=seed,
         shuffle=True
     )
-    
+
     train_path = Path(cfg["dataset"]["processed_train_path"])
     test_path = Path(cfg["dataset"]["processed_test_path"])
     train_path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     train_df.to_csv(train_path, index=False)
     test_df.to_csv(test_path, index=False)
-    
+
     logger.info("Split completed and saved", train_count=len(train_df), test_count=len(test_df))
     return train_df, test_df
 

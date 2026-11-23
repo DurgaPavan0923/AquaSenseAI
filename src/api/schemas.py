@@ -1,6 +1,7 @@
 """Pydantic v2 REST API Request and Response Data Transfer Schemas."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 from src.common.constants import STATUTORY_DISCLAIMER
@@ -47,8 +48,8 @@ class PredictionDetail(BaseModel):
     predicted_class: int
     predicted_label: str
     confidence_score: float
-    calibrated_probabilities: Dict[str, float]
-    conformal_prediction_set: List[str]
+    calibrated_probabilities: dict[str, float]
+    conformal_prediction_set: list[str]
     coverage_guarantee: float
 
 
@@ -57,12 +58,12 @@ class AnomalyDetail(BaseModel):
     anomaly_score: float
     has_sensor_fault: bool
     severity: str
-    violations: List[str]
+    violations: list[str]
 
 
 class ExplainabilityDetail(BaseModel):
     base_value: float
-    shap_attributions: Dict[str, float]
+    shap_attributions: dict[str, float]
     dominant_pollutant_driver: str
 
 
@@ -73,7 +74,7 @@ class SingleInferenceResponse(BaseModel):
     prediction: PredictionDetail
     anomaly: AnomalyDetail
     explainability: ExplainabilityDetail
-    regulatory_audit: Dict[str, List[str]]
+    regulatory_audit: dict[str, list[str]]
     abstain_recommended: bool = Field(default=False, description="True if conformal prediction set is ambiguous (>1 class) or an anomaly was flagged.")
     triage_recommendation: str = Field(default="", description="Operational action protocol (Screening clear vs Mandatory lab assay required).")
     disclaimer: str = Field(default=STATUTORY_DISCLAIMER)
@@ -82,8 +83,8 @@ class SingleInferenceResponse(BaseModel):
 class BatchInferenceResponse(BaseModel):
     total_processed: int
     anomalies_flagged: int
-    pollution_risk_counts: Dict[str, int]
-    preview: List[Dict[str, Any]]
+    pollution_risk_counts: dict[str, int]
+    preview: list[dict[str, Any]]
     disclaimer: str = Field(default=STATUTORY_DISCLAIMER)
 
 
@@ -96,4 +97,4 @@ class HealthResponse(BaseModel):
 
 
 class AlertAcknowledgeRequest(BaseModel):
-    acknowledged_by: Optional[str] = "operator"
+    acknowledged_by: str | None = "operator"

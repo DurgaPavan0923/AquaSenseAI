@@ -1,10 +1,12 @@
 """Security audit tests: CSV formula injection, API Key auth enforcement, and upload limits."""
 
 import io
+
 import pytest
 from fastapi.testclient import TestClient
 
-from src.api.main import app as fastapi_app, sanitize_csv_cell
+from src.api.main import app as fastapi_app
+from src.api.main import sanitize_csv_cell
 
 
 @pytest.fixture

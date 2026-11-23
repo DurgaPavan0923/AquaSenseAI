@@ -2,25 +2,24 @@
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 import joblib
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-
 import numpy as np
 import pandas as pd
-from scipy import stats
 import seaborn as sns
 from sklearn.calibration import calibration_curve
 from sklearn.metrics import (
     accuracy_score,
-    brier_score_loss,
+    average_precision_score,
     classification_report,
     confusion_matrix,
     f1_score,
     precision_recall_curve,
-    average_precision_score
 )
 
 from src.common.config import yaml_config
@@ -32,7 +31,7 @@ def evaluate_model_comprehensive(
     model: Any,
     test_df: pd.DataFrame,
     output_dir: str = "reports"
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Generates complete scientific evaluation metrics, plots, and statistical reports."""
     reports_path = Path(output_dir)
     figures_path = reports_path / "figures"
@@ -161,7 +160,7 @@ def evaluate_model_comprehensive(
 if __name__ == "__main__":
     artifacts_dir = Path(yaml_config["models"]["artifacts_dir"]) / "xgboost_active"
     model_path = artifacts_dir / "model.joblib"
-    
+
     if not model_path.exists():
         logger.info("Model artifact not found; training pipeline first...")
         from src.ml.train import train_and_calibrate_active_model
@@ -172,6 +171,6 @@ if __name__ == "__main__":
         model = joblib.load(model_path)
         test_path = Path(yaml_config["dataset"]["processed_test_path"])
         test_df = pd.read_csv(test_path)
-        
+
     evaluate_model_comprehensive(model, test_df)
     print("Evaluation completed successfully.")

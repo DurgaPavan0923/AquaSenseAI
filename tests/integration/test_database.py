@@ -1,7 +1,5 @@
 """Integration tests for SQLAlchemy persistence, transactional records, and alert workflows."""
 
-import pytest
-from src.database.models import Alert, ModelRecord, Prediction, Sample
 from src.database.repository import WaterQualityRepository
 
 

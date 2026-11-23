@@ -1,6 +1,7 @@
 """Unit tests for sensor fault detection and multivariate anomaly scoring."""
 
 import pytest
+
 from src.ml.anomaly import AnomalyEngine
 
 

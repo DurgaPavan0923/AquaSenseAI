@@ -2,6 +2,7 @@
 
 import io
 import os
+
 import pandas as pd
 import requests
 import streamlit as st
@@ -76,7 +77,7 @@ if uploaded_file is not None:
                 enriched_df["Predicted_Risk"] = [labels[p] for p in preds]
                 enriched_df["Confidence_Score"] = [round(float(probs[i, preds[i]]), 3) for i in range(len(preds))]
                 enriched_df["Conformal_Prediction_Set"] = [", ".join(c) for c in conformal_sets]
-                
+
                 # Check anomalies
                 anom_flags = []
                 for idx in range(len(raw_df)):

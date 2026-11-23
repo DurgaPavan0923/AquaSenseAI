@@ -2,9 +2,9 @@
 
 import json
 from pathlib import Path
+
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 import streamlit as st
 
 from src.common.constants import STATUTORY_DISCLAIMER
@@ -91,7 +91,7 @@ with col_shap:
 with col_stab:
     st.subheader("Cross-Fold SHAP Stability")
     if stability_file.exists():
-        with open(stability_file, "r") as f:
+        with open(stability_file) as f:
             stab = json.load(f)
     else:
         stab = {
@@ -104,7 +104,7 @@ with col_stab:
     st.markdown(
         f"""
         * **Folds Evaluated:** `{stab['n_folds_analyzed']}`
-        * **Mean Spearman Rank Correlation ($\rho_s$):** `{stab['mean_spearman_rank_correlation']:.3f}` (Threshold: $\ge 0.85$)
+        * **Mean Spearman Rank Correlation ($\rho_s$):** `{stab['mean_spearman_rank_correlation']:.3f}` (Threshold: $\\ge 0.85$)
         * **Top-3 Feature Jaccard Overlap:** `{stab['mean_top3_jaccard_similarity'] * 100:.1f}%`
         * **Explanation Stability Status:** {'✅ **HIGHLY STABLE**' if stab['is_stable'] else '⚠️ UNSTABLE'}
         """

@@ -2,7 +2,6 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from src.ml.preprocessor import build_preprocessor, get_cv_splitter
 
@@ -13,7 +12,7 @@ def test_preprocessing_pipeline_handles_nans():
         "pH", "Turbidity", "Temperature", "Dissolved Oxygen",
         "Biochemical Oxygen Demand", "Lead", "Mercury", "Arsenic"
     ]
-    
+
     # Create test data with deliberate NaNs
     data = pd.DataFrame({
         "pH": [7.0, np.nan, 7.4],

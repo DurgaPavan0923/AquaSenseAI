@@ -2,22 +2,20 @@
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 import pandas as pd
-from scipy.stats import spearmanr
 import shap
+from scipy.stats import spearmanr
 
-from src.common.config import yaml_config
 from src.common.logger import logger
-from src.ml.features import DomainFeatureEngineer
 
 
 class WaterQualityExplainer:
     """Wrapper around TreeSHAP providing local, global, and cross-fold stability diagnostics."""
 
-    def __init__(self, model_pipeline: Any, feature_names: Optional[List[str]] = None):
+    def __init__(self, model_pipeline: Any, feature_names: list[str] | None = None):
         """Initializes explainer by unpacking classifier and preprocessor from pipeline."""
         self.pipeline = model_pipeline
         self.feature_names = feature_names or [
@@ -25,7 +23,7 @@ class WaterQualityExplainer:
             "Biochemical Oxygen Demand", "Lead", "Mercury", "Arsenic",
             "OSDR", "HMHI", "pH_Neutrality_Deviation", "Turbidity_DO_Ratio", "Toxic_Breach_Count"
         ]
-        
+
         # Unpack base estimator (handling CalibratedClassifierCV wrapper if present)
         if hasattr(model_pipeline, "calibrated_classifiers_"):
             # CalibratedClassifierCV with prefit base estimator
@@ -46,7 +44,7 @@ class WaterQualityExplainer:
             logger.warning("TreeExplainer fallback to KernelExplainer", error=str(e))
             self.explainer = None
 
-    def explain_local_sample(self, sample_df: pd.DataFrame) -> Dict[str, Any]:
+    def explain_local_sample(self, sample_df: pd.DataFrame) -> dict[str, Any]:
         """Generates localized SHAP attributions for a single sample.
         
         Returns:
@@ -67,7 +65,7 @@ class WaterQualityExplainer:
             }
 
         shap_vals = self.explainer.shap_values(transformed)
-        
+
         # Handle multi-class SHAP output shape: (n_samples, n_features, n_classes) or list of classes
         if isinstance(shap_vals, list):
             # Class 2 (Polluted) attributions
@@ -84,7 +82,7 @@ class WaterQualityExplainer:
 
         n_feats = min(len(self.feature_names), len(sample_shap))
         attributions = {self.feature_names[i]: float(sample_shap[i]) for i in range(n_feats)}
-        
+
         # Sort features by absolute contribution
         sorted_feats = sorted(attributions.items(), key=lambda x: abs(x[1]), reverse=True)
         dominant_driver = sorted_feats[0][0] if sorted_feats else "None"
@@ -122,7 +120,7 @@ class WaterQualityExplainer:
             transformed = df_clean.values
 
         shap_values = self.explainer.shap_values(transformed)
-        
+
         # Take Polluted class (index 2) or single output
         plot_vals = shap_values[2] if isinstance(shap_values, list) and len(shap_values) > 2 else shap_values
 
@@ -135,7 +133,7 @@ class WaterQualityExplainer:
         )
         plt.title("Global TreeSHAP Feature Attributions (Pollution Risk Impact)", fontsize=13, fontweight="bold")
         plt.tight_layout()
-        
+
         out_file = Path(output_path)
         out_file.parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(out_file, dpi=300)
@@ -147,15 +145,16 @@ def evaluate_shap_fold_stability(
     X_train: pd.DataFrame,
     y_train: pd.Series,
     splitter: Any,
-    numerical_cols: List[str],
+    numerical_cols: list[str],
     output_path: str = "reports/shap_stability_report.json"
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Evaluates whether feature importance rankings remain stable across 5 cross-validation folds."""
-    from src.ml.train import get_model_candidates
-    from src.ml.preprocessor import build_preprocessor
     from sklearn.pipeline import Pipeline
-    
-    fold_importances: List[np.ndarray] = []
+
+    from src.ml.preprocessor import build_preprocessor
+    from src.ml.train import get_model_candidates
+
+    fold_importances: list[np.ndarray] = []
     feature_names = numerical_cols + [
         "OSDR", "HMHI", "pH_Neutrality_Deviation", "Turbidity_DO_Ratio", "Toxic_Breach_Count"
     ]
@@ -163,13 +162,13 @@ def evaluate_shap_fold_stability(
     for fold, (train_idx, val_idx) in enumerate(splitter.split(X_train, y_train)):
         X_tr, y_tr = X_train.iloc[train_idx], y_train.iloc[train_idx]
         X_v = X_train.iloc[val_idx]
-        
+
         pipe = Pipeline([
             ("preprocessor", build_preprocessor(numerical_cols)),
             ("classifier", get_model_candidates()["xgboost"])
         ])
         pipe.fit(X_tr, y_tr)
-        
+
         explainer = WaterQualityExplainer(pipe, feature_names=feature_names)
         if explainer.explainer is not None:
             X_trans = pipe.named_steps["preprocessor"].transform(X_v)
@@ -192,7 +191,7 @@ def evaluate_shap_fold_stability(
             res = spearmanr(flat_fi[i], flat_fi[j])
             rho_val = float(np.asarray(getattr(res, "statistic", res[0])).ravel()[0])
             correlations.append(rho_val)
-            
+
             top3_i = set(np.argsort(flat_fi[i])[-3:].tolist())
             top3_j = set(np.argsort(flat_fi[j])[-3:].tolist())
             jaccard = len(top3_i & top3_j) / len(top3_i | top3_j)
