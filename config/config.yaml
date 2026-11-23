@@ -1,0 +1,108 @@
+schema_version: "1.0.0"
+
+project:
+  name: "AquaSense AI"
+  environment: "development"
+  random_seed: 42
+
+dataset:
+  kaggle_dataset_slug: "ziya07/water-quality-and-pollution-monitoring-dataset"
+  local_raw_path: "data/raw/water_quality.csv"
+  processed_train_path: "data/processed/train.csv"
+  processed_test_path: "data/processed/test.csv"
+  download_source: "auto" # "kaggle" | "local" | "auto" (falls back to synthetic benchmark if not found)
+
+target:
+  name: "Pollution Level"
+  classes:
+    0: "Good"
+    1: "Moderate"
+    2: "Polluted"
+  class_weights: "balanced"
+
+features:
+  numerical:
+    - name: "pH"
+      unit: "dimensionless"
+      min_physical: 0.0
+      max_physical: 14.0
+      sensor_fault_delta_max: 2.5
+    - name: "Turbidity"
+      unit: "NTU"
+      min_physical: 0.0
+      max_physical: 500.0
+      sensor_fault_delta_max: 50.0
+    - name: "Temperature"
+      unit: "celsius"
+      min_physical: -5.0
+      max_physical: 60.0
+      sensor_fault_delta_max: 10.0
+    - name: "Dissolved Oxygen"
+      unit: "mg/L"
+      min_physical: 0.0
+      max_physical: 25.0
+      sensor_fault_delta_max: 6.0
+    - name: "Biochemical Oxygen Demand"
+      unit: "mg/L"
+      min_physical: 0.0
+      max_physical: 100.0
+      sensor_fault_delta_max: 20.0
+    - name: "Lead"
+      unit: "mg/L"
+      min_physical: 0.0
+      max_physical: 5.0
+      sensor_fault_delta_max: 0.5
+    - name: "Mercury"
+      unit: "mg/L"
+      min_physical: 0.0
+      max_physical: 1.0
+      sensor_fault_delta_max: 0.1
+    - name: "Arsenic"
+      unit: "mg/L"
+      min_physical: 0.0
+      max_physical: 5.0
+      sensor_fault_delta_max: 0.5
+  optional_identifiers:
+    - "Sample_ID"
+    - "Unnamed: 0"
+    - "Station_ID"
+    - "Timestamp"
+
+split:
+  strategy: "stratified_kfold" # "stratified_kfold" | "group_kfold" | "time_series_split"
+  test_size: 0.20
+  n_splits: 5
+  shuffle: true
+  random_state: 42
+
+guidelines:
+  # WHO Guidelines for Drinking-water Quality (4th ed.) & BIS IS 10500:2012
+  who_bis_limits:
+    ph_min: 6.5
+    ph_max: 8.5
+    turbidity_max: 5.0          # 1.0 ideal, 5.0 acceptable limit (NTU)
+    dissolved_oxygen_min: 6.5   # Ecological and potable minimum threshold (mg/L)
+    bod_max: 2.0                # Clean water threshold (mg/L)
+    lead_max: 0.01              # Statutory toxic limit (mg/L)
+    mercury_max: 0.001          # Statutory toxic limit (mg/L)
+    arsenic_max: 0.01           # Statutory toxic limit (mg/L)
+
+models:
+  active_model_type: "xgboost"
+  hyperparameter_search:
+    enabled: true
+    method: "randomized" # "optuna" | "randomized"
+    n_iter: 15
+  artifacts_dir: "artifacts/models"
+  registry_dir: "artifacts/registry"
+
+conformal:
+  confidence_levels: [0.90, 0.95]
+  default_alpha: 0.10 # 90% coverage guarantee
+  method: "lac"       # Least Ambiguous Classifier / inductive non-conformity 1 - P(y|x)
+
+anomaly:
+  isolation_forest:
+    contamination: 0.03
+    random_state: 42
+  drift_psi_threshold: 0.20

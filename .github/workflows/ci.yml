@@ -1,0 +1,90 @@
+name: AquaSense AI Continuous Integration
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint-and-typecheck:
+    name: Code Quality & Typing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Linting Tools
+        run: |
+          pip install --upgrade pip
+          pip install ruff mypy types-requests types-PyYAML
+
+      - name: Run Ruff Linter
+        run: |
+          ruff check src/ tests/
+
+      - name: Run Mypy Type Checker
+        run: |
+          mypy src/ --ignore-missing-imports
+
+  test-and-coverage:
+    name: Pytest Unit, Integration & Leakage Tests
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Core & Test Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Execute Pytest Suite with Coverage
+        run: |
+          pytest tests/ -v --cov=src --cov-report=term-missing --cov-fail-under=80
+
+      - name: Execute Model Performance Floor Regression Test
+        run: |
+          python -m src.data.loader
+          python -m src.ml.train
+          python -m src.ml.evaluate
+
+  docker-build:
+    name: Verify Container Compilation
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build API Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.api
+          push: false
+          tags: aquasense-api:test
+
+      - name: Build Dashboard Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.dashboard
+          push: false
+          tags: aquasense-dashboard:test

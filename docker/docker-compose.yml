@@ -1,0 +1,66 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: aquasense_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-aquasense}
+      POSTGRES_USER: ${POSTGRES_USER:-aquasense_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-aquasense_secure_pwd}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - aquasense_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-aquasense_admin} -d ${POSTGRES_DB:-aquasense}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    container_name: aquasense_api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-aquasense_admin}:${POSTGRES_PASSWORD:-aquasense_secure_pwd}@db:5432/${POSTGRES_DB:-aquasense}
+      AQUASENSE_ENV: production
+      LOG_LEVEL: INFO
+    ports:
+      - "8000:8000"
+    networks:
+      - aquasense_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  dashboard:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dashboard
+    container_name: aquasense_dashboard
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      API_BASE_URL: http://api:8000/api/v1
+    ports:
+      - "8501:8501"
+    networks:
+      - aquasense_net
+
+networks:
+  aquasense_net:
+    driver: bridge
+
+volumes:
+  postgres_data:

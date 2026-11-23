@@ -1,0 +1,25 @@
+{
+  "imputation_policy": "median",
+  "scaling_policy": "RobustScaler (IQR-based to preserve heavy metal spikes)",
+  "total_rows_inspected": 3,
+  "missing_values_detected": {
+    "pH": 1,
+    "Turbidity": 1,
+    "Temperature": 0,
+    "Dissolved Oxygen": 0,
+    "Biochemical Oxygen Demand": 0,
+    "Lead": 1,
+    "Mercury": 1,
+    "Arsenic": 0
+  },
+  "iqr_outliers_flagged": {
+    "pH": 0,
+    "Turbidity": 0,
+    "Temperature": 0,
+    "Dissolved Oxygen": 0,
+    "Biochemical Oxygen Demand": 0,
+    "Lead": 0,
+    "Mercury": 0,
+    "Arsenic": 0
+  }
+}

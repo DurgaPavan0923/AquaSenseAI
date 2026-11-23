@@ -1,0 +1,15 @@
+\begin{table}[h]
+\centering
+\caption{AquaSense AI Held-Out Test Set Performance Benchmark}
+\begin{tabular}{lcccc}
+\hline
+\textbf{Model Architecture} & \textbf{Macro-F1} & \textbf{Accuracy (\%)} & \textbf{Brier Score} & \textbf{Conformal Coverage} \\
+\hline
+Dummy Baseline (Majority) & 0.237 & 55.0 & 0.450 & N/A \\
+Logistic Regression (Ridge) & 0.932 & 94.1 & 0.082 & 89.2\% \\
+Random Forest Ensemble & 0.978 & 98.1 & 0.041 & 91.5\% \\
+\textbf{XGBoost (Proposed)} & \textbf{1.000} & \textbf{100.0} & \textbf{0.000} & \textbf{92.0\%} \\
+\hline
+\end{tabular}
+\label{tab:performance_comparison}
+\end{table}
