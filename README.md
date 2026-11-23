@@ -123,10 +123,12 @@ AquaSense AI's FastAPI REST microservice is configured for zero-friction serverl
 
 1. **Import Git Repository:** In your Vercel Dashboard, select **Add New Project** and import `DurgaPavan0923/AquaSenseAI`.
 2. **Build & Framework Detection:** Vercel automatically detects the FastAPI configuration via `[tool.vercel] entrypoint = "src.api.main:app"` in `pyproject.toml` and `vercel.json`.
-3. **Environment Variables (Optional):**
+3. **Environment Variables:**
+   * `VERCEL_SUPPORT_LARGE_FUNCTIONS`: `1` *(Recommended: Enables up to 5 GB bundle limit on Vercel Fluid Compute)*
    * `AQUASENSE_ENV`: `production`
    * `API_KEY`: Custom secret token for API clients (default: `aquasense-dev-secret-key-2026`)
    * `DATABASE_URL`: Managed Postgres connection string (e.g. Neon, Supabase, Vercel Postgres). If left unset, automatically defaults to serverless `/tmp/aquasense.db`.
+
 4. **Deploy:** Click **Deploy**. Your FastAPI interactive documentation is live at `https://your-project.vercel.app/docs`.
 
 ---

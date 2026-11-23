@@ -3,9 +3,6 @@
 import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 
 import numpy as np
 import pandas as pd
@@ -102,6 +99,11 @@ class WaterQualityExplainer:
         """Generates and saves global SHAP summary beeswarm/bar plots."""
         if self.explainer is None:
             return
+
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+
 
         # Defensive feature filtering for DataFrame inputs
         if isinstance(background_df, pd.DataFrame):
