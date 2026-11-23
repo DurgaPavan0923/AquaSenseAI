@@ -4,13 +4,14 @@ import io
 import pytest
 from fastapi.testclient import TestClient
 
-from src.api.main import app, sanitize_csv_cell
+from src.api.main import app as fastapi_app, sanitize_csv_cell
 
 
 @pytest.fixture
 def client():
-    with TestClient(app) as test_client:
+    with TestClient(fastapi_app) as test_client:
         yield test_client
+
 
 
 def test_csv_formula_injection_sanitization():

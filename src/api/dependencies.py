@@ -46,7 +46,13 @@ class ModelServicesContainer:
 
     def load_services(self) -> None:
         """Loads serialized model artifacts and initializes explainer and anomaly engine."""
-        artifacts_dir = Path(yaml_config["models"]["artifacts_dir"]) / "xgboost_active"
+        base_dir = Path(__file__).resolve().parent.parent.parent
+        raw_art_dir = Path(yaml_config["models"]["artifacts_dir"]) / "xgboost_active"
+        if (raw_art_dir / "model.joblib").exists():
+            artifacts_dir = raw_art_dir
+        else:
+            artifacts_dir = base_dir / raw_art_dir
+
         model_file = artifacts_dir / "model.joblib"
         calib_file = artifacts_dir / "calibration_scores.npy"
 
@@ -77,13 +83,15 @@ class ModelServicesContainer:
 
         # Initialize and fit Anomaly Engine
         self.anomaly_engine = AnomalyEngine()
-        train_path = Path(yaml_config["dataset"]["processed_train_path"])
+        raw_train_path = Path(yaml_config["dataset"]["processed_train_path"])
+        train_path = raw_train_path if raw_train_path.exists() else base_dir / raw_train_path
         if train_path.exists():
             train_df = pd.read_csv(train_path)
             self.anomaly_engine.fit(train_df)
         else:
             from src.data.loader import load_dataset
             self.anomaly_engine.fit(load_dataset())
+
 
         self.is_ready = True
         logger.info("All inference and explainability engines successfully loaded into memory")

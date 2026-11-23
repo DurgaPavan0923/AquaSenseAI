@@ -4,12 +4,21 @@ import io
 import json
 import os
 import re
+import sys
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+# Ensure project root is in sys.path for serverless runtimes (Vercel / AWS Lambda)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 import numpy as np
 import pandas as pd
 from fastapi import Depends, FastAPI, File, HTTPException, Request, Response, UploadFile, status
+
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -76,6 +85,29 @@ def sanitize_csv_cell(value: Any) -> Any:
     if isinstance(value, str) and value.startswith(("=", "+", "-", "@", "\t", "\r")):
         return "'" + value
     return value
+
+
+# ---------------------------------------------------------
+# 0. Root & Discovery Probes (for Vercel & Browser Navigation)
+# ---------------------------------------------------------
+@app.get("/", tags=["System"])
+def root():
+    """Root health and service discovery endpoint for Vercel deployment."""
+    return {
+        "service": "AquaSense AI Microservice",
+        "status": "online",
+        "documentation": "/docs",
+        "openapi_schema": "/openapi.json",
+        "health_check": "/api/v1/health",
+        "version": "1.0.0",
+        "disclaimer": STATUTORY_DISCLAIMER
+    }
+
+
+@app.get("/health", response_model=HealthResponse, tags=["System"], include_in_schema=False)
+def health_alias(db: Session = Depends(get_db)):
+    """Convenience alias for /api/v1/health."""
+    return health_check(db)
 
 
 # ---------------------------------------------------------

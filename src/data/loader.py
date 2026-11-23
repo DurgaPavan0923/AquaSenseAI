@@ -105,7 +105,13 @@ def load_dataset(config: Optional[dict] = None) -> pd.DataFrame:
     """Loads dataset from local CSV, Kaggle API, or falls back to synthetic benchmark generation."""
     cfg = config or yaml_config
     local_path = Path(cfg["dataset"]["local_raw_path"])
+    if not local_path.exists():
+        base_dir = Path(__file__).resolve().parent.parent.parent
+        candidate = base_dir / local_path
+        if candidate.exists():
+            local_path = candidate
     slug = cfg["dataset"]["kaggle_dataset_slug"]
+
     
     # 1. Check if local CSV already exists
     if local_path.exists():

@@ -117,6 +117,20 @@ mypy src/
 
 ---
 
+## ☁️ Vercel Deployment
+
+AquaSense AI's FastAPI REST microservice is configured for zero-friction serverless deployment on **Vercel Functions**:
+
+1. **Import Git Repository:** In your Vercel Dashboard, select **Add New Project** and import `DurgaPavan0923/AquaSenseAI`.
+2. **Build & Framework Detection:** Vercel automatically detects the FastAPI configuration via `[tool.vercel] entrypoint = "src.api.main:app"` in `pyproject.toml` and `vercel.json`.
+3. **Environment Variables (Optional):**
+   * `AQUASENSE_ENV`: `production`
+   * `API_KEY`: Custom secret token for API clients (default: `aquasense-dev-secret-key-2026`)
+   * `DATABASE_URL`: Managed Postgres connection string (e.g. Neon, Supabase, Vercel Postgres). If left unset, automatically defaults to serverless `/tmp/aquasense.db`.
+4. **Deploy:** Click **Deploy**. Your FastAPI interactive documentation is live at `https://your-project.vercel.app/docs`.
+
+---
+
 ## 📖 Documentation Sitemap
 * [System Architecture Blueprint](docs/architecture_blueprint.md)
 * [Model Card](docs/model_card.md)

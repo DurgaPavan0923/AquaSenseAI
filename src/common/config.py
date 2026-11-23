@@ -42,6 +42,15 @@ class AppConfig(BaseSettings):
     config_path: str = Field(default="config/config.yaml", alias="CONFIG_PATH")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
 
+    @property
+    def effective_database_url(self) -> str:
+        """Returns database URL, redirecting default local SQLite to /tmp in serverless/Vercel environments."""
+        is_serverless = bool(os.getenv("VERCEL") or os.getenv("VERCEL_ENV") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
+        if is_serverless and self.database_url.startswith("sqlite:///."):
+            return "sqlite:////tmp/aquasense.db"
+        return self.database_url
+
+
 
 def load_yaml_config(path: str = "config/config.yaml") -> Dict[str, Any]:
     """Loads raw YAML configuration dictionary."""

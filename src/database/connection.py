@@ -9,10 +9,11 @@ from src.common.logger import logger
 from src.database.models import Base
 
 # Support SQLite thread safety if using SQLite
-connect_args = {"check_same_thread": False} if settings.database_url.startswith("sqlite") else {}
+db_url = settings.effective_database_url
+connect_args = {"check_same_thread": False} if db_url.startswith("sqlite") else {}
 
 engine = create_engine(
-    settings.database_url,
+    db_url,
     connect_args=connect_args,
     echo=False,
     pool_pre_ping=True
@@ -25,7 +26,7 @@ def init_db() -> None:
     """Initializes schema and tables in the target database."""
     try:
         Base.metadata.create_all(bind=engine)
-        logger.info("Database tables verified and initialized", url=settings.database_url.split("@")[-1])
+        logger.info("Database tables verified and initialized", url=settings.effective_database_url.split("@")[-1])
     except Exception as e:
         logger.error("Database initialization failed", error=str(e))
         raise

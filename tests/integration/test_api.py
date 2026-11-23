@@ -3,14 +3,34 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from src.api.main import app
+from src.api.main import app as fastapi_app
 
 
 @pytest.fixture
 def client():
     """Initializes FastAPI test client."""
-    with TestClient(app) as test_client:
+    with TestClient(fastapi_app) as test_client:
         yield test_client
+
+
+def test_root_endpoint(client):
+    """Verifies that the root discovery endpoint returns service metadata."""
+    response = client.get("/")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "online"
+    assert "/docs" in data["documentation"]
+    assert "disclaimer" in data
+
+
+def test_health_alias_endpoint(client):
+    """Verifies convenience alias /health matches /api/v1/health."""
+    response = client.get("/health")
+    assert response.status_code == 200
+    data = response.json()
+    assert "status" in data
+    assert "database" in data
+
 
 
 def test_health_endpoint(client):
