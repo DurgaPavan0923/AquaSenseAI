@@ -6,7 +6,6 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-import shap
 from scipy.stats import spearmanr
 
 from src.common.logger import logger
@@ -37,12 +36,22 @@ class WaterQualityExplainer:
             self.preprocessor = None
             self.classifier = model_pipeline
 
-        # Initialize TreeExplainer
-        try:
-            self.explainer = shap.TreeExplainer(self.classifier)
-        except Exception as e:
-            logger.warning("TreeExplainer fallback to KernelExplainer", error=str(e))
-            self.explainer = None
+        # Initialize native booster or TreeExplainer
+        self.booster = None
+        if hasattr(self.classifier, "get_booster"):
+            try:
+                self.booster = self.classifier.get_booster()
+            except Exception:
+                self.booster = None
+
+        self.explainer = None
+        if self.booster is None:
+            try:
+                import shap
+                self.explainer = shap.TreeExplainer(self.classifier)
+            except Exception as e:
+                logger.warning("TreeExplainer fallback to KernelExplainer", error=str(e))
+                self.explainer = None
 
     def explain_local_sample(self, sample_df: pd.DataFrame) -> dict[str, Any]:
         """Generates localized SHAP attributions for a single sample.
@@ -56,51 +65,79 @@ class WaterQualityExplainer:
         else:
             transformed = sample_df.values
 
-        if self.explainer is None:
-            # Fallback heuristic attribution if SHAP C-tree fails
+        # 1. Native XGBoost TreeSHAP C++ acceleration
+        if self.booster is not None:
+            try:
+                import xgboost as xgb
+                dmat = xgb.DMatrix(transformed)
+                contribs = self.booster.predict(dmat, pred_contribs=True)
+                if len(contribs.shape) == 3:
+                    class_idx = min(2, contribs.shape[1] - 1)
+                    sample_shap = contribs[0, class_idx, :-1]
+                    base_val = float(contribs[0, class_idx, -1])
+                else:
+                    sample_shap = contribs[0, :-1]
+                    base_val = float(contribs[0, -1])
+
+                n_feats = min(len(self.feature_names), len(sample_shap))
+                attributions = {self.feature_names[i]: float(sample_shap[i]) for i in range(n_feats)}
+                sorted_feats = sorted(attributions.items(), key=lambda x: abs(x[1]), reverse=True)
+                dominant_driver = sorted_feats[0][0] if sorted_feats else "None"
+                return {
+                    "base_value": base_val,
+                    "attributions": attributions,
+                    "dominant_pollutant_driver": dominant_driver
+                }
+            except Exception as e:
+                logger.warning("Native booster pred_contribs failed, falling back", error=str(e))
+
+        # 2. shap.TreeExplainer fallback
+        if self.explainer is not None:
+            shap_vals = self.explainer.shap_values(transformed)
+            if isinstance(shap_vals, list):
+                class_idx = min(2, len(shap_vals) - 1)
+                sample_shap = shap_vals[class_idx][0]
+                base_val = float(self.explainer.expected_value[class_idx])
+            elif len(shap_vals.shape) == 3:
+                class_idx = min(2, shap_vals.shape[2] - 1)
+                sample_shap = shap_vals[0, :, class_idx]
+                base_val = float(self.explainer.expected_value[class_idx])
+            else:
+                sample_shap = shap_vals[0]
+                base_val = float(self.explainer.expected_value) if np.isscalar(self.explainer.expected_value) else float(self.explainer.expected_value[0])
+
+            n_feats = min(len(self.feature_names), len(sample_shap))
+            attributions = {self.feature_names[i]: float(sample_shap[i]) for i in range(n_feats)}
+            sorted_feats = sorted(attributions.items(), key=lambda x: abs(x[1]), reverse=True)
+            dominant_driver = sorted_feats[0][0] if sorted_feats else "None"
             return {
-                "base_value": 0.0,
-                "attributions": {col: 0.0 for col in self.feature_names},
-                "dominant_pollutant_driver": "N/A"
+                "base_value": base_val,
+                "attributions": attributions,
+                "dominant_pollutant_driver": dominant_driver
             }
 
-        shap_vals = self.explainer.shap_values(transformed)
-
-        # Handle multi-class SHAP output shape: (n_samples, n_features, n_classes) or list of classes
-        if isinstance(shap_vals, list):
-            # Class 2 (Polluted) attributions
-            class_idx = min(2, len(shap_vals) - 1)
-            sample_shap = shap_vals[class_idx][0]
-            base_val = float(self.explainer.expected_value[class_idx])
-        elif len(shap_vals.shape) == 3:
-            class_idx = min(2, shap_vals.shape[2] - 1)
-            sample_shap = shap_vals[0, :, class_idx]
-            base_val = float(self.explainer.expected_value[class_idx])
-        else:
-            sample_shap = shap_vals[0]
-            base_val = float(self.explainer.expected_value) if np.isscalar(self.explainer.expected_value) else float(self.explainer.expected_value[0])
-
-        n_feats = min(len(self.feature_names), len(sample_shap))
-        attributions = {self.feature_names[i]: float(sample_shap[i]) for i in range(n_feats)}
-
-        # Sort features by absolute contribution
-        sorted_feats = sorted(attributions.items(), key=lambda x: abs(x[1]), reverse=True)
-        dominant_driver = sorted_feats[0][0] if sorted_feats else "None"
-
+        # 3. Defensive heuristic fallback
         return {
-            "base_value": base_val,
-            "attributions": attributions,
-            "dominant_pollutant_driver": dominant_driver
+            "base_value": 0.0,
+            "attributions": {col: 0.0 for col in self.feature_names},
+            "dominant_pollutant_driver": "N/A"
         }
 
     def generate_global_summary(self, background_df: pd.DataFrame, output_path: str = "reports/figures/shap_summary.png") -> None:
         """Generates and saves global SHAP summary beeswarm/bar plots."""
-        if self.explainer is None:
-            return
-
         import matplotlib
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
+        import shap
+
+        if self.explainer is None and hasattr(self, "classifier"):
+            try:
+                self.explainer = shap.TreeExplainer(self.classifier)
+            except Exception:
+                pass
+        if self.explainer is None:
+            return
+
 
 
         # Defensive feature filtering for DataFrame inputs
