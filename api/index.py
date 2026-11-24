@@ -32,6 +32,7 @@ from src.aquasense.uncertainty import assess_prediction_confidence
 MODEL_BUNDLE_PATH = PROJECT_ROOT / "models" / "model_bundle.joblib"
 REGISTRY_PATH = PROJECT_ROOT / "models" / "registry.json"
 METRICS_PATH = PROJECT_ROOT / "results" / "metrics.json"
+WEB_DIR = PROJECT_ROOT / "web"
 
 bundle: dict[str, Any] | None = None
 if MODEL_BUNDLE_PATH.exists():
@@ -169,14 +170,70 @@ def sanitize_csv_cell(value: str) -> str:
     return stripped
 
 
+def serve_html_page(filename: str):
+    """Serves static HTML pages with utf-8 encoding."""
+    target = WEB_DIR / filename
+    if target.exists():
+        from starlette.responses import HTMLResponse
+
+        return HTMLResponse(content=target.read_text(encoding="utf-8"))
+    raise HTTPException(status_code=404, detail=f"Page {filename} not found.")
+
+
 @app.get("/")
-def root_endpoint() -> dict[str, Any]:
-    """Serves API status."""
-    return {
-        "service": "AquaSense AI Serverless API",
-        "status": "healthy",
-        "endpoints": ["/health", "/predict", "/explain", "/anomaly", "/models"],
-    }
+@app.get("/index.html")
+def get_home_page():
+    """Serves AquaSense AI Web Homepage."""
+    return serve_html_page("index.html")
+
+
+@app.get("/analyze")
+@app.get("/analyze.html")
+def get_analyze_page():
+    """Serves Water Analysis Workspace Page."""
+    return serve_html_page("analyze.html")
+
+
+@app.get("/batch")
+@app.get("/batch.html")
+def get_batch_page():
+    """Serves Batch CSV Screening Page."""
+    return serve_html_page("batch.html")
+
+
+@app.get("/results")
+@app.get("/results.html")
+def get_results_page():
+    """Serves Model Research & Metrics Page."""
+    return serve_html_page("results.html")
+
+
+@app.get("/monitoring")
+@app.get("/monitoring.html")
+def get_monitoring_page():
+    """Serves Geographic Monitoring Map Page."""
+    return serve_html_page("monitoring.html")
+
+
+@app.get("/about")
+@app.get("/about.html")
+def get_about_page():
+    """Serves Methodology & Standards Page."""
+    return serve_html_page("about.html")
+
+
+@app.get("/privacy")
+@app.get("/privacy.html")
+def get_privacy_page():
+    """Serves Privacy Policy Page."""
+    return serve_html_page("privacy.html")
+
+
+@app.get("/terms")
+@app.get("/terms.html")
+def get_terms_page():
+    """Serves Terms & Conditions Page."""
+    return serve_html_page("terms.html")
 
 
 @app.get("/health")
@@ -490,13 +547,20 @@ async def predict_batch_csv(file: UploadFile = File(...)) -> dict[str, Any]:
 
 
 # Mount static web directory for local execution and frontend serving
-WEB_DIR = PROJECT_ROOT / "web"
 if WEB_DIR.exists():
     from starlette.staticfiles import StaticFiles
 
     figures_dir = WEB_DIR / "figures"
     if figures_dir.exists():
         app.mount("/figures", StaticFiles(directory=str(figures_dir)), name="figures")
+
+    css_dir = WEB_DIR / "css"
+    if css_dir.exists():
+        app.mount("/css", StaticFiles(directory=str(css_dir)), name="css")
+
+    js_dir = WEB_DIR / "js"
+    if js_dir.exists():
+        app.mount("/js", StaticFiles(directory=str(js_dir)), name="js")
 
     app.mount("/", StaticFiles(directory=str(WEB_DIR), html=True), name="web_root")
 
