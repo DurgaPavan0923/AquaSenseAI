@@ -49,8 +49,31 @@ Evaluated on the 200-sample holdout test partition:
 | Calibrated Random Forest (Active) | 0.9950 | 0.9943 | 0.9950 | 0.9992 | 0.0106 |
 | XGBoost | 0.9950 | 0.9943 | 0.9950 | 0.9975 | 0.0102 |
 
-Visualizations generated into `outputs/figures/`:
-- `confusion_matrix.png`, `pr_curves.png`, `reliability_diagram.png`, `shap_summary.png`, `feature_distributions.png`, `correlation_matrix.png`.
+### Diagnostic Visualizations
+
+#### Confusion Matrix
+Holdout test partition confusion matrix showing multi-class screening performance across Good, Moderate, and Polluted tiers.
+![Confusion Matrix](outputs/figures/confusion_matrix.png)
+
+#### Precision-Recall Curves
+One-vs-Rest Precision-Recall curves across all three risk categories with macro-averaged PR-AUC of 0.9992.
+![Precision-Recall Curves](outputs/figures/pr_curves.png)
+
+#### Reliability Diagram (Probability Calibration)
+Platt scaling calibration curves and multi-class Brier score (0.0106) demonstrating well-calibrated class probability estimates.
+![Reliability Diagram](outputs/figures/reliability_diagram.png)
+
+#### Global Feature Importance (TreeSHAP Summary)
+TreeSHAP beeswarm distribution displaying the magnitude and directional impact of key parameters on water pollution risk categorization.
+![TreeSHAP Summary](outputs/figures/shap_summary.png)
+
+#### Feature Distributions
+Univariate density distributions of physical, chemical, and heavy metal concentrations partitioned across risk tiers.
+![Feature Distributions](outputs/figures/feature_distributions.png)
+
+#### Correlation Heatmap
+Spearman and Pearson correlation matrix illustrating relationships between physicochemical parameters and statutory ratio indicators.
+![Correlation Matrix](outputs/figures/correlation_matrix.png)
 
 ## 6. Explainability and Uncertainty
 - **Conformal Guarantee:** If prediction set contains multiple tiers or confidence drops below 60%, the output flags: "Screening support only. Needs laboratory test."
