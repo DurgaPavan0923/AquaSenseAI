@@ -14,7 +14,7 @@ from typing import Any
 
 import joblib
 import numpy as np
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -56,12 +56,16 @@ app.add_middleware(
 
 
 @app.middleware("http")
-async def normalize_vercel_paths(request, call_next):
+async def normalize_vercel_paths(request: Request, call_next):
     """Normalize Vercel function path prefixes if forwarded."""
-    path = request.scope.get("path", "")
-    if path.startswith("/api/index.py"):
-        new_path = path[len("/api/index.py") :] or "/"
-        request.scope["path"] = new_path
+    orig_path = request.scope.get("path", "")
+    request.scope["orig_path"] = orig_path
+    forwarded_path = (
+        request.headers.get("x-matched-path")
+        or request.headers.get("x-forwarded-uri")
+        or request.headers.get("x-invoke-path")
+    )
+    request.scope["forwarded_path"] = forwarded_path
     return await call_next(request)
 
 FEATURE_ORDER = [
@@ -149,17 +153,15 @@ def sanitize_csv_cell(value: str) -> str:
 
 
 @app.get("/")
-def root_endpoint():
-    """Serves root homepage or API status."""
-    index_path = PROJECT_ROOT / "web" / "index.html"
-    if index_path.exists():
-        from starlette.responses import HTMLResponse
-
-        return HTMLResponse(content=index_path.read_text(encoding="utf-8"))
+@app.post("/")
+def root_endpoint(request: Request):
+    """Debug what Vercel forwards in headers and scope."""
     return {
-        "service": "AquaSense AI Serverless API",
-        "status": "healthy",
-        "endpoints": ["/health", "/predict", "/explain", "/anomaly", "/models"],
+        "scope_path": request.scope.get("path"),
+        "orig_path": request.scope.get("orig_path"),
+        "forwarded_path": request.scope.get("forwarded_path"),
+        "raw_path": request.scope.get("raw_path", b"").decode("latin-1", errors="ignore"),
+        "headers": dict(request.headers),
     }
 
 
