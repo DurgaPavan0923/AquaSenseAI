@@ -22,6 +22,11 @@ htmlcov/
 .mypy_cache/
 .ruff_cache/
 
+# Raw dataset files (license compliance: download via scripts/download_data.py)
+data/raw/*.csv
+data/raw/*.zip
+data/processed/*.csv
+
 # Local SQLite databases
 *.db
 *.sqlite3
@@ -36,3 +41,9 @@ Desktop.ini
 .idea/
 *.swp
 *.swo
+
+# Temporary / scratch files
+tmp/
+scratch/
+*.log
+.ipynb_checkpoints/

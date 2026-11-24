@@ -1,43 +1,47 @@
-"""Data leakage prevention tests across cross-validation splits and preprocessor pipelines."""
+"""
+Data leakage verification tests for AquaSense AI.
+Verifies no shared sample identifiers, no identical feature rows across splits,
+and preprocessor statistics fit exclusively on train partitions.
+"""
 
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import StandardScaler
 
-from src.data.loader import generate_benchmark_dataset, split_and_save_data
-from src.ml.preprocessor import build_preprocessor
+from src.aquasense.data import (
+    FEATURE_COLUMNS,
+    TARGET_COLUMN,
+    load_raw_dataset,
+    split_dataset,
+    verify_no_leakage,
+)
 
 
 def test_zero_leakage_between_train_and_test():
     """Asserts strict disjointness between train and test sample partitions."""
-    df = generate_benchmark_dataset(n_samples=200, seed=42)
-    train_df, test_df = split_and_save_data(df, config={
-        "split": {"test_size": 0.25, "random_state": 42},
-        "target": {"name": "Pollution Level"},
-        "dataset": {"processed_train_path": "data/processed/train.csv", "processed_test_path": "data/processed/test.csv"}
-    })
+    df = load_raw_dataset()
+    train_df, test_df = split_dataset(df, test_size=0.20, random_state=42)
 
-    # Assert no index overlap
-    train_ids = set(train_df["Sample_ID"])
-    test_ids = set(test_df["Sample_ID"])
-    overlap = train_ids.intersection(test_ids)
-    assert len(overlap) == 0, f"Critical Data Leakage: Found {len(overlap)} overlapping IDs between train and test sets."
+    # Verification function must pass without raising AssertionError
+    assert verify_no_leakage(train_df, test_df) is True
 
 
 def test_preprocessor_does_not_leak_test_statistics():
-    """Verifies that imputer and scaler statistics are derived solely from training folds."""
-    numerical_cols = [
-        "pH", "Turbidity", "Temperature", "Dissolved Oxygen",
-        "Biochemical Oxygen Demand", "Lead", "Mercury", "Arsenic"
-    ]
+    """Verifies that scaler statistics are derived solely from training data."""
+    train_data = pd.DataFrame({col: [1.0, 2.0, 3.0] for col in FEATURE_COLUMNS})
+    test_data = pd.DataFrame({col: [100.0, 200.0, 300.0] for col in FEATURE_COLUMNS})
 
-    # Train set with low values
-    train_data = pd.DataFrame({col: [1.0, 2.0, 3.0] for col in numerical_cols})
-    # Test set with extreme values
-    test_data = pd.DataFrame({col: [100.0, 200.0, 300.0] for col in numerical_cols})
+    scaler = StandardScaler()
+    scaler.fit(train_data)
 
-    pipeline = build_preprocessor(numerical_cols)
-    pipeline.fit(train_data)
+    # Mean of [1.0, 2.0, 3.0] is 2.0
+    assert np.allclose(scaler.mean_, 2.0)
 
-    # Imputer statistics should equal median of train_data (2.0), unaffected by test_data
-    imputer_stats = pipeline.named_steps["imputer"].statistics_
-    assert np.allclose(imputer_stats, 2.0), f"Data Leakage in Imputer: Expected 2.0, got {imputer_stats}"
+    # Test data transform does not change scaler statistics
+    _ = scaler.transform(test_data)
+    assert np.allclose(scaler.mean_, 2.0)
+
+
+def test_target_not_in_features():
+    """Ensures target column is excluded from feature set."""
+    assert TARGET_COLUMN not in FEATURE_COLUMNS

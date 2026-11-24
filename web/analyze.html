@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Water Quality Analysis & Screening: AquaSense AI</title>
+  <meta name="description" content="Screen water samples for pollution risk tiers with calibrated probabilities, conformal prediction sets, and local feature attribution.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Mandatory Statutory Notice -->
+  <div class="disclaimer-banner">
+    Notice: Screening support only. Not a substitute for certified laboratory analysis.
+  </div>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="header-container">
+      <a href="/index.html" class="brand-link">
+        <img src="/favicon.svg" alt="AquaSense AI Logo" class="brand-logo">
+        <span>AquaSense AI</span>
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="/index.html">Home</a></li>
+          <li><a href="/analyze.html" class="active">Analyze</a></li>
+          <li><a href="/results.html">Model & Results</a></li>
+          <li><a href="/about.html">About & Method</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <h1>Water Sample Risk Screening</h1>
+    <p>
+      Provide laboratory or sensor readings for the 8 core parameters below. The model generates calibrated risk probabilities, conformal uncertainty prediction sets, and counterfactual local feature impact scores.
+    </p>
+
+    <div class="grid-2">
+      <!-- Single Sample Form -->
+      <div class="card">
+        <h2>Single Sample Parameters</h2>
+        <form id="prediction-form">
+          <div class="form-group">
+            <label for="input-ph" class="form-label">pH (Acidity / Alkalinity)</label>
+            <input type="number" step="0.01" min="0" max="14" class="form-input" id="input-ph" value="7.20" required>
+            <div class="form-hint">Acceptable potable limit: 6.5 to 8.5 (WHO / BIS)</div>
+          </div>
+
+          <div class="form-group">
+            <label for="input-turbidity" class="form-label">Turbidity (NTU)</label>
+            <input type="number" step="0.01" min="0" max="500" class="form-input" id="input-turbidity" value="2.80" required>
+            <div class="form-hint">Acceptable potable limit: &le; 5.0 NTU</div>
+          </div>
+
+          <div class="form-group">
+            <label for="input-temp" class="form-label">Water Temperature (&deg;C)</label>
+            <input type="number" step="0.1" min="-5" max="60" class="form-input" id="input-temp" value="22.5" required>
+            <div class="form-hint">Ambient seasonal temperature range</div>
+          </div>
+
+          <div class="form-group">
+            <label for="input-do" class="form-label">Dissolved Oxygen (mg/L)</label>
+            <input type="number" step="0.01" min="0" max="25" class="form-input" id="input-do" value="6.50" required>
+            <div class="form-hint">Potable / healthy ecological baseline: &ge; 6.5 mg/L</div>
+          </div>
+
+          <div class="form-group">
+            <label for="input-bod" class="form-label">Biochemical Oxygen Demand (mg/L)</label>
+            <input type="number" step="0.01" min="0" max="100" class="form-input" id="input-bod" value="1.80" required>
+            <div class="form-hint">Unpolluted water limit: &le; 2.0 mg/L</div>
+          </div>
+
+          <div class="form-group">
+            <label for="input-lead" class="form-label">Lead - Pb (mg/L)</label>
+            <input type="number" step="0.0001" min="0" max="5" class="form-input" id="input-lead" value="0.0050" required>
+            <div class="form-hint">Toxic limit: &le; 0.01 mg/L</div>
+          </div>
+
+          <div class="form-group">
+            <label for="input-mercury" class="form-label">Mercury - Hg (mg/L)</label>
+            <input type="number" step="0.00001" min="0" max="1" class="form-input" id="input-mercury" value="0.00030" required>
+            <div class="form-hint">Toxic limit: &le; 0.001 mg/L</div>
+          </div>
+
+          <div class="form-group">
+            <label for="input-arsenic" class="form-label">Arsenic - As (mg/L)</label>
+            <input type="number" step="0.0001" min="0" max="5" class="form-input" id="input-arsenic" value="0.0040" required>
+            <div class="form-hint">Toxic limit: &le; 0.01 mg/L</div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+            Run Screening Analysis
+          </button>
+        </form>
+      </div>
+
+      <!-- Live Results Column -->
+      <div>
+        <div class="card">
+          <h2>Screening Assessment</h2>
+          <div id="prediction-result">
+            <p style="color: var(--text-muted); font-size: 0.95rem;">
+              Submit the form to compute calibrated probabilities, conformal prediction sets, and risk classifications.
+            </p>
+          </div>
+        </div>
+
+        <div id="attribution-result"></div>
+        <div id="anomaly-result"></div>
+      </div>
+    </div>
+
+    <!-- Batch Upload Section -->
+    <section class="card" style="margin-top: 24px;">
+      <h2>Batch CSV File Screening</h2>
+      <p>
+        Upload a comma-separated values (CSV) file containing water sample records for high-throughput batch screening. The file must include columns: <code>pH</code>, <code>Turbidity</code>, <code>Temperature</code>, <code>Dissolved Oxygen</code>, <code>Biochemical Oxygen Demand</code>, <code>Lead</code>, <code>Mercury</code>, and <code>Arsenic</code>.
+      </p>
+      <form id="batch-upload-form" style="margin-top: 16px;">
+        <div style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
+          <input type="file" id="batch-file-input" accept=".csv" class="form-input" style="max-width: 400px;" required>
+          <button type="submit" class="btn btn-secondary">Process CSV Batch</button>
+        </div>
+        <div class="form-hint">Maximum upload file size: 2 MB. Maximum batch limit: 500 rows per submission.</div>
+      </form>
+      <div id="batch-result"></div>
+    </section>
+
+    <!-- Session History -->
+    <section class="card" style="margin-top: 32px;">
+      <h2>Session Screening History</h2>
+      <p style="font-size: 0.88rem; color: var(--text-muted);">
+        Recent screening analyses conducted in this browser session (stored locally in client browser storage).
+      </p>
+      <div id="session-history"></div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div>
+        <p style="color: #ffffff; font-weight: 600; margin-bottom: 4px;">AquaSense AI Research Initiative</p>
+        <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0;">Course URP4201 Research Methodology. Screening support only.</p>
+      </div>
+      <ul class="footer-links">
+        <li><a href="/index.html">Home</a></li>
+        <li><a href="/analyze.html">Analyze</a></li>
+        <li><a href="/results.html">Results</a></li>
+        <li><a href="/about.html">About</a></li>
+        <li><a href="/privacy.html">Privacy Policy</a></li>
+        <li><a href="/terms.html">Terms & Conditions</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>

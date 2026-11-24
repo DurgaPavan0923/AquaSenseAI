@@ -1,0 +1,14 @@
+{
+  "active_model": "RandomForest-PlattCalibrated-DomainFeatures",
+  "version": "1.0.0",
+  "bundle_file": "model_bundle.joblib",
+  "bundle_size_kb": 398.89,
+  "metrics": {
+    "macro_f1": 0.9943,
+    "accuracy": 0.995,
+    "weighted_f1": 0.995,
+    "macro_pr_auc": 0.9992,
+    "brier_score": 0.0106
+  },
+  "conformal_coverage": 0.995
+}

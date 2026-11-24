@@ -1,0 +1,12 @@
+\begin{tabular}{llrrr}
+\toprule
+ablation_group & configuration & macro_f1 & macro_pr_auc & brier_score \\
+\midrule
+Feature Representation & Raw 8 Features & 1.0000 & 1.0000 & 0.0036 \\
+Feature Representation & Domain Engineered 13 Features & 0.9943 & 0.9992 & 0.0106 \\
+Class Imbalance Handling & Standard (Unweighted) & 0.9943 & 0.9994 & 0.0098 \\
+Class Imbalance Handling & Cost-Sensitive (Balanced Weights) & 0.9943 & 0.9992 & 0.0106 \\
+Probability Calibration & Uncalibrated Random Forest & 0.9943 & 0.9992 & 0.0110 \\
+Probability Calibration & Platt Calibrated Random Forest & 0.9943 & 0.9992 & 0.0106 \\
+\bottomrule
+\end{tabular}

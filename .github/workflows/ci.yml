@@ -2,7 +2,7 @@ name: AquaSense AI Continuous Integration
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -20,21 +20,21 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
-      - name: Install Linting Tools
+      - name: Install Linting & Quality Tools
         run: |
           pip install --upgrade pip
           pip install ruff mypy types-requests types-PyYAML
 
       - name: Run Ruff Linter
         run: |
-          ruff check src/ tests/
+          python -m ruff check src/aquasense api tests scripts
 
       - name: Run Mypy Type Checker
         run: |
-          mypy src/ --ignore-missing-imports
+          python -m mypy src/aquasense api scripts --ignore-missing-imports
 
-  test-and-coverage:
-    name: Pytest Unit, Integration & Leakage Tests
+  verification-and-tests:
+    name: Verification & Pytest Suite
     runs-on: ubuntu-latest
     needs: lint-and-typecheck
     steps:
@@ -47,45 +47,19 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
-      - name: Install Core & Test Dependencies
+      - name: Install Dependencies
         run: |
           pip install --upgrade pip
-          pip install -e ".[dev]"
+          pip install -r requirements-train.txt
+
+      - name: Design & Typography Audit
+        run: |
+          python scripts/lint_design.py
+
+      - name: Serverless Bundle Size Audit (< 250 MB)
+        run: |
+          python scripts/check_bundle_size.py
 
       - name: Execute Pytest Suite with Coverage
         run: |
-          pytest tests/ -v --cov=src --cov-report=term-missing --cov-fail-under=75
-
-
-      - name: Execute Model Performance Floor Regression Test
-        run: |
-          python -m src.data.loader
-          python -m src.ml.train
-          python -m src.ml.evaluate
-
-  docker-build:
-    name: Verify Container Compilation
-    runs-on: ubuntu-latest
-    needs: lint-and-typecheck
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build API Docker Image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/Dockerfile.api
-          push: false
-          tags: aquasense-api:test
-
-      - name: Build Dashboard Docker Image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/Dockerfile.dashboard
-          push: false
-          tags: aquasense-dashboard:test
+          python -m pytest --cov=src/aquasense --cov=api --cov-fail-under=80

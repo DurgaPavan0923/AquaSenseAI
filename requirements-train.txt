@@ -1,0 +1,26 @@
+# Training, Research, Local Dashboard and Testing Dependencies
+-r requirements.txt
+pandas>=2.0.0
+scipy>=1.10.0
+xgboost>=2.0.0
+shap>=0.44.0
+matplotlib>=3.8.0
+seaborn>=0.13.0
+plotly>=5.18.0
+optuna>=3.5.0
+streamlit>=1.31.0
+jupyter>=1.0.0
+ipykernel>=6.29.0
+pytest>=8.0.0
+pytest-cov>=4.1.0
+ruff>=0.3.0
+mypy>=1.8.0
+sqlalchemy>=2.0.25
+alembic>=1.13.1
+pyyaml>=6.0.1
+uvicorn>=0.27.0
+python-multipart>=0.0.6
+requests>=2.31.0
+httpx>=0.27.0
+types-requests>=2.31.0
+types-PyYAML>=6.0.12

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Model Benchmarks & Experimental Results: AquaSense AI</title>
+  <meta name="description" content="Verified machine learning benchmarks, ablations, conformal coverage evaluation, and TreeSHAP explainability figures for AquaSense AI.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Mandatory Statutory Notice -->
+  <div class="disclaimer-banner">
+    Notice: Screening support only. Not a substitute for certified laboratory analysis.
+  </div>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="header-container">
+      <a href="/index.html" class="brand-link">
+        <img src="/favicon.svg" alt="AquaSense AI Logo" class="brand-logo">
+        <span>AquaSense AI</span>
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="/index.html">Home</a></li>
+          <li><a href="/analyze.html">Analyze</a></li>
+          <li><a href="/results.html" class="active">Model & Results</a></li>
+          <li><a href="/about.html">About & Method</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <h1>Empirical Evaluation & Benchmark Findings</h1>
+    <p>
+      All reported performance figures, calibration curves, and feature importance analyses are derived from the audited 20% holdout test partition (200 complete records) using fixed pseudo-random seeds (seed 42).
+    </p>
+
+    <!-- Headline Summary Cards -->
+    <div class="grid-3">
+      <div class="card">
+        <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Holdout Macro-F1</div>
+        <div style="font-size: 2rem; font-weight: 700; color: var(--accent); margin: 6px 0;">99.43%</div>
+        <div style="font-size: 0.85rem; color: var(--text-muted);">Evaluated on 200 holdout test samples</div>
+      </div>
+      <div class="card">
+        <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Macro PR-AUC</div>
+        <div style="font-size: 2rem; font-weight: 700; color: #166534; margin: 6px 0;">0.9992</div>
+        <div style="font-size: 0.85rem; color: var(--text-muted);">Area under Precision-Recall curve</div>
+      </div>
+      <div class="card">
+        <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Conformal Coverage</div>
+        <div style="font-size: 2rem; font-weight: 700; color: #0284c7; margin: 6px 0;">99.50%</div>
+        <div style="font-size: 0.85rem; color: var(--text-muted);">Empirical test coverage (90% target)</div>
+      </div>
+    </div>
+
+    <!-- Model Comparison Table -->
+    <section class="card" style="margin-bottom: 32px;">
+      <h2>1. Architecture Comparison on Holdout Test Split</h2>
+      <p style="font-size: 0.9rem;">
+        Comparison between naive baselines, linear discriminants, and tree ensemble architectures.
+      </p>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Model Architecture</th>
+              <th>Accuracy</th>
+              <th>Macro-F1</th>
+              <th>Weighted-F1</th>
+              <th>Macro PR-AUC</th>
+              <th>Brier Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Dummy Baseline (Majority Class)</td>
+              <td>0.5600</td>
+              <td>0.2393</td>
+              <td>0.4021</td>
+              <td>0.6667</td>
+              <td>0.8800</td>
+            </tr>
+            <tr>
+              <td>Logistic Regression (Balanced)</td>
+              <td>0.9950</td>
+              <td>0.9943</td>
+              <td>0.9950</td>
+              <td>0.9973</td>
+              <td>0.0128</td>
+            </tr>
+            <tr>
+              <td><strong>Calibrated Random Forest (Active)</strong></td>
+              <td><strong>0.9950</strong></td>
+              <td><strong>0.9943</strong></td>
+              <td><strong>0.9950</strong></td>
+              <td><strong>0.9992</strong></td>
+              <td><strong>0.0106</strong></td>
+            </tr>
+            <tr>
+              <td>XGBoost Classifier</td>
+              <td>0.9950</td>
+              <td>0.9943</td>
+              <td>0.9950</td>
+              <td>0.9975</td>
+              <td>0.0102</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Ablations Table -->
+    <section class="card" style="margin-bottom: 32px;">
+      <h2>2. Controlled Ablation Experiments</h2>
+      <p style="font-size: 0.9rem;">
+        Systematic assessment of domain feature engineering, class rebalancing, and probability calibration.
+      </p>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Ablation Dimension</th>
+              <th>Configuration</th>
+              <th>Macro-F1</th>
+              <th>Macro PR-AUC</th>
+              <th>Brier Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Feature Representation</td>
+              <td>Raw 8 Physicochemical Features</td>
+              <td>1.0000</td>
+              <td>1.0000</td>
+              <td>0.0036</td>
+            </tr>
+            <tr>
+              <td>Feature Representation</td>
+              <td>Domain Engineered 13 Features</td>
+              <td>0.9943</td>
+              <td>0.9992</td>
+              <td>0.0106</td>
+            </tr>
+            <tr>
+              <td>Class Imbalance</td>
+              <td>Standard Unweighted Trees</td>
+              <td>0.9943</td>
+              <td>0.9994</td>
+              <td>0.0098</td>
+            </tr>
+            <tr>
+              <td>Class Imbalance</td>
+              <td>Cost-Sensitive Balanced Weights</td>
+              <td>0.9943</td>
+              <td>0.9992</td>
+              <td>0.0106</td>
+            </tr>
+            <tr>
+              <td>Uncertainty Calibration</td>
+              <td>Uncalibrated Random Forest</td>
+              <td>0.9943</td>
+              <td>0.9992</td>
+              <td>0.0110</td>
+            </tr>
+            <tr>
+              <td>Uncertainty Calibration</td>
+              <td>Platt Calibrated Random Forest</td>
+              <td>0.9943</td>
+              <td>0.9992</td>
+              <td>0.0106</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Figures Grid -->
+    <h2>3. Diagnostic Visualizations</h2>
+    <div class="grid-2">
+      <div class="figure-container">
+        <h3>Confusion Matrix (Holdout Split)</h3>
+        <img src="/figures/confusion_matrix.png" alt="Confusion Matrix on Test Partition" class="figure-img">
+        <div class="figure-caption">Holdout test split (200 samples). Only 1 sample in the Moderate class was categorized as Good.</div>
+      </div>
+
+      <div class="figure-container">
+        <h3>Precision-Recall Curves</h3>
+        <img src="/figures/pr_curves.png" alt="Precision-Recall Curves per Class" class="figure-img">
+        <div class="figure-caption">Per-class PR-AUC: Good 0.9998, Moderate 0.9977, Polluted 1.0000.</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="figure-container">
+        <h3>Reliability Diagram (Calibration)</h3>
+        <img src="/figures/reliability_diagram.png" alt="Reliability Calibration Curves" class="figure-img">
+        <div class="figure-caption">Empirical fraction of positives vs mean predicted probability under Platt scaling.</div>
+      </div>
+
+      <div class="figure-container">
+        <h3>Global Feature Importance (TreeSHAP)</h3>
+        <img src="/figures/shap_summary.png" alt="Global TreeSHAP Summary Beeswarm Plot" class="figure-img">
+        <div class="figure-caption">Offline TreeSHAP beeswarm distribution across holdout samples.</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="figure-container">
+        <h3>Feature Distributions</h3>
+        <img src="/figures/feature_distributions.png" alt="Physicochemical Feature Histograms" class="figure-img">
+        <div class="figure-caption">Empirical distributions of 8 core water quality metrics.</div>
+      </div>
+
+      <div class="figure-container">
+        <h3>Feature Correlation Matrix</h3>
+        <img src="/figures/correlation_matrix.png" alt="Pairwise Feature Correlation Heatmap" class="figure-img">
+        <div class="figure-caption">Pearson correlation coefficients between raw physicochemical parameters.</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div>
+        <p style="color: #ffffff; font-weight: 600; margin-bottom: 4px;">AquaSense AI Research Initiative</p>
+        <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0;">Course URP4201 Research Methodology. Screening support only.</p>
+      </div>
+      <ul class="footer-links">
+        <li><a href="/index.html">Home</a></li>
+        <li><a href="/analyze.html">Analyze</a></li>
+        <li><a href="/results.html">Results</a></li>
+        <li><a href="/about.html">About</a></li>
+        <li><a href="/privacy.html">Privacy Policy</a></li>
+        <li><a href="/terms.html">Terms & Conditions</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>

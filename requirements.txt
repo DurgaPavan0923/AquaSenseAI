@@ -1,16 +1,6 @@
-# AquaSense AI Production Core Backend Dependencies
-numpy>=1.24.0
-pandas>=2.0.0
-scipy>=1.10.0
-scikit-learn>=1.3.0
-xgboost>=2.0.0
-pydantic>=2.5.0
-pydantic-settings>=2.1.0
-pyyaml>=6.0.1
+# Runtime dependencies for Vercel Serverless Function
 fastapi>=0.109.0
-uvicorn>=0.27.0
-python-multipart>=0.0.6
-slowapi>=0.1.9
-sqlalchemy>=2.0.25
+pydantic>=2.5.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
 joblib>=1.3.2
-structlog>=24.1.0

@@ -1,3 +1,1 @@
-"""AquaSense AI root package."""
-
-__version__ = "1.0.0"
+"""AquaSense AI Source Root."""

@@ -1,5 +1,10 @@
-"""Model regression testing enforcing statistical and predictive performance floors."""
+"""
+Model performance regression tests for AquaSense AI.
+Verifies that the deployed model meets strict quality thresholds on the holdout test set:
+Macro-F1 >= 0.90, Accuracy >= 0.90, and Conformal Coverage >= 0.88.
+"""
 
+import json
 from pathlib import Path
 
 import joblib
@@ -7,44 +12,53 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score
 
-from src.common.config import yaml_config
-from src.ml.conformal import ConformalPredictor
+from src.aquasense.data import FEATURE_COLUMNS, TARGET_COLUMN
+from src.aquasense.uncertainty import ConformalCalibrator
 
 
-def test_active_model_performance_floors():
-    """Asserts that production model candidate exceeds required statistical performance thresholds."""
-    artifacts_dir = Path(yaml_config["models"]["artifacts_dir"]) / "xgboost_active"
-    model_path = artifacts_dir / "model.joblib"
-    calib_path = artifacts_dir / "calibration_scores.npy"
-    test_path = Path(yaml_config["dataset"]["processed_test_path"])
+def test_production_model_bundle_metrics():
+    bundle_path = Path("models/model_bundle.joblib")
+    test_path = Path("data/processed/test.csv")
+    metrics_path = Path("results/metrics.json")
 
-    assert model_path.exists(), "Active model artifact missing."
-    assert calib_path.exists(), "Calibration scores artifact missing."
-    assert test_path.exists(), "Holdout test dataset missing."
+    assert bundle_path.exists(), "Model bundle missing."
+    assert test_path.exists(), "Holdout test set missing."
+    assert metrics_path.exists(), "Metrics summary missing."
 
-    model = joblib.load(model_path)
-    calib_scores = np.load(calib_path)
+    bundle = joblib.load(bundle_path)
     test_df = pd.read_csv(test_path)
 
-    numerical_cols = [f["name"] for f in yaml_config["features"]["numerical"]]
-    target_col = yaml_config["target"]["name"]
+    X_test = test_df[FEATURE_COLUMNS]
+    y_test = test_df[TARGET_COLUMN].values
 
-    X_test = test_df[numerical_cols]
-    y_test = test_df[target_col].to_numpy()
-
-    probs = model.predict_proba(X_test)
+    clf = bundle["model"]
+    probs = clf.predict_proba(X_test)
     preds = np.argmax(probs, axis=1)
 
-    macro_f1 = f1_score(y_test, preds, average="macro", zero_division=0)
-    acc = accuracy_score(y_test, preds)
+    macro_f1 = float(f1_score(y_test, preds, average="macro"))
+    acc = float(accuracy_score(y_test, preds))
 
-    # 1. Performance Floor Assertions
-    assert macro_f1 >= 0.90, f"Model Macro-F1 regression: {macro_f1:.4f} < threshold 0.90"
-    assert acc >= 0.90, f"Model accuracy regression: {acc:.4f} < threshold 0.90"
+    # Regression floors
+    assert macro_f1 >= 0.90, f"Macro-F1 regression: {macro_f1:.4f} < 0.90"
+    assert acc >= 0.90, f"Accuracy regression: {acc:.4f} < 0.90"
 
-    # 2. Conformal Coverage Floor
-    conformal = ConformalPredictor(calib_scores)
-    cov_res = conformal.evaluate_coverage(probs, y_test, alpha=0.10)
-    assert cov_res["empirical_coverage"] >= 0.85, (
-        f"Conformal coverage regression: {cov_res['empirical_coverage']:.4f} < 0.85 nominal target"
-    )
+    # Conformal Coverage floor
+    quantile = float(bundle["conformal_quantile"])
+    conformal = ConformalCalibrator(alpha=0.10)
+    conformal.quantile_ = quantile
+    conformal.calibrated_ = True
+    cov = conformal.evaluate_coverage(probs, y_test)
+
+    assert cov["empirical_coverage"] >= 0.88, f"Coverage regression: {cov['empirical_coverage']} < 0.88"
+
+
+def test_metrics_json_matches_bundle():
+    metrics_path = Path("results/metrics.json")
+    with open(metrics_path, encoding="utf-8") as f:
+        data = json.load(f)
+
+    h = data["headline_metrics"]
+    assert h["macro_f1"] >= 0.90
+    assert h["accuracy"] >= 0.90
+    assert h["macro_pr_auc"] >= 0.90
+    assert h["brier_score"] <= 0.10

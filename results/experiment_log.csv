@@ -1,0 +1,11 @@
+experiment,model,model_name,accuracy,macro_f1,weighted_f1,macro_pr_auc,brier_score
+model_comparison,Dummy (Majority),Dummy (Majority),0.56,0.2393,0.4021,0.6667,0.88
+model_comparison,Logistic Regression,Logistic Regression,0.995,0.9943,0.995,0.9973,0.0128
+model_comparison,Random Forest,Random Forest,0.995,0.9943,0.995,0.9989,0.0111
+model_comparison,XGBoost,XGBoost,0.995,0.9943,0.995,0.9975,0.0102
+ablation,Raw 8 Features,,0.0,1.0,0.0,1.0,0.0036
+ablation,Domain Engineered 13 Features,,0.0,0.9943,0.0,0.9992,0.0106
+ablation,Standard (Unweighted),,0.0,0.9943,0.0,0.9994,0.0098
+ablation,Cost-Sensitive (Balanced Weights),,0.0,0.9943,0.0,0.9992,0.0106
+ablation,Uncalibrated Random Forest,,0.0,0.9943,0.0,0.9992,0.011
+ablation,Platt Calibrated Random Forest,,0.0,0.9943,0.0,0.9992,0.0106

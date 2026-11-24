@@ -1,0 +1,70 @@
+{
+  "dataset_split": "Holdout Test Split (20% Stratified, 200 samples)",
+  "training_samples": 800,
+  "test_samples": 200,
+  "model_architecture": "Calibrated Random Forest with Domain Features",
+  "headline_metrics": {
+    "macro_f1": 0.9943,
+    "accuracy": 0.995,
+    "weighted_f1": 0.995,
+    "macro_pr_auc": 0.9992,
+    "brier_score": 0.0106
+  },
+  "per_class_metrics": {
+    "Good": {
+      "precision": 0.9912,
+      "recall": 1.0,
+      "f1_score": 0.9956,
+      "pr_auc": 0.9998
+    },
+    "Moderate": {
+      "precision": 1.0,
+      "recall": 0.975,
+      "f1_score": 0.9873,
+      "pr_auc": 0.9977
+    },
+    "Polluted": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "pr_auc": 1.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      112,
+      0,
+      0
+    ],
+    [
+      1,
+      39,
+      0
+    ],
+    [
+      0,
+      0,
+      48
+    ]
+  ],
+  "conformal_uncertainty": {
+    "target_coverage": 0.9,
+    "empirical_coverage": 0.995,
+    "average_set_size": 1.0,
+    "quantile_threshold": 0.021586139731428644
+  },
+  "feature_rank_stability": {
+    "mean_spearman_rank_correlation": 0.9505,
+    "stability_level": "High"
+  },
+  "training_medians": {
+    "pH": 7.152,
+    "Turbidity": 2.895,
+    "Temperature": 22.1,
+    "Dissolved Oxygen": 5.58,
+    "Biochemical Oxygen Demand": 2.41,
+    "Lead": 0.006055,
+    "Mercury": 0.0003775,
+    "Arsenic": 0.0056500000000000005
+  }
+}

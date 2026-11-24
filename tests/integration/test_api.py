@@ -1,83 +1,83 @@
-"""Integration tests for FastAPI REST microservice contracts and schema validations."""
+"""
+Integration tests for AquaSense AI serverless API endpoints.
+Tests /health, /predict, /explain, /anomaly, /models, and /predict/batch.
+"""
 
-import pytest
+import io
+
 from fastapi.testclient import TestClient
 
-from src.api.main import app as fastapi_app
+from api.index import app
+
+client = TestClient(app)
 
 
-@pytest.fixture
-def client():
-    """Initializes FastAPI test client."""
-    with TestClient(fastapi_app) as test_client:
-        yield test_client
-
-
-def test_root_endpoint(client):
-    """Verifies that the root discovery endpoint returns service metadata."""
-    response = client.get("/")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "online"
-    assert "/docs" in data["documentation"]
-    assert "disclaimer" in data
-
-
-def test_health_alias_endpoint(client):
-    """Verifies convenience alias /health matches /api/v1/health."""
+def test_health_endpoint():
     response = client.get("/health")
     assert response.status_code == 200
     data = response.json()
-    assert "status" in data
-    assert "database" in data
+    assert data["status"] == "healthy"
+    assert data["model_loaded"] is True
+    assert "notice" in data
 
 
-
-def test_health_endpoint(client):
-    """Verifies that system health probe returns 200 and valid schema."""
-    response = client.get("/api/v1/health")
+def test_models_endpoint():
+    response = client.get("/models")
     assert response.status_code == 200
     data = response.json()
-    assert "status" in data
-    assert "database" in data
-    assert "model_loaded" in data
+    assert "model_name" in data
+    assert "features" in data
+    assert "classes" in data
+    assert "conformal_quantile_90" in data
 
 
-def test_predict_single_sample_valid(client, sample_feature_dict):
-    """Verifies end-to-end inference request generates calibrated probabilities and conformal set."""
-    payload = {
-        "location_id": "STATION_INTEGRATION_TEST",
-        "sensor_id": "PROBE_PYTEST",
-        "features": sample_feature_dict,
-        "confidence_level": 0.90
-    }
-    response = client.post("/api/v1/predict", json=payload)
+def test_predict_endpoint_valid(sample_feature_dict):
+    response = client.post("/predict", json=sample_feature_dict)
     assert response.status_code == 200
     data = response.json()
-    assert "sample_id" in data
-    assert data["prediction"]["predicted_label"] in ["Good", "Moderate", "Polluted"]
-    assert "conformal_prediction_set" in data["prediction"]
-    assert len(data["prediction"]["conformal_prediction_set"]) >= 1
+    assert data["risk_tier"] in ["Good", "Moderate", "Polluted"]
+    assert "probabilities" in data
+    assert "conformal_prediction_set" in data
+    assert len(data["conformal_prediction_set"]) >= 1
+    assert "needs_laboratory_test" in data
     assert "disclaimer" in data
 
 
-def test_predict_single_sample_invalid_range_raises_422(client, sample_feature_dict):
-    """Verifies that out-of-range physical inputs fail Pydantic validation with 422."""
-    bad_features = sample_feature_dict.copy()
-    bad_features["pH"] = 18.5  # Exceeds maximum 14.0
-
-    payload = {
-        "location_id": "STATION_FAIL",
-        "features": bad_features
-    }
-    response = client.post("/api/v1/predict", json=payload)
-    assert response.status_code == 422  # Unprocessable Entity
+def test_predict_endpoint_out_of_bounds(sample_feature_dict):
+    invalid = sample_feature_dict.copy()
+    invalid["pH"] = 25.0  # Physical max 14.0
+    response = client.post("/predict", json=invalid)
+    assert response.status_code == 422
 
 
-def test_standalone_anomaly_endpoint(client, sample_feature_dict):
-    """Verifies standalone anomaly detection endpoint."""
-    response = client.post("/api/v1/anomaly", json=sample_feature_dict)
+def test_explain_endpoint(sample_feature_dict):
+    response = client.post("/explain", json=sample_feature_dict)
     assert response.status_code == 200
     data = response.json()
-    assert "is_anomaly" in data
-    assert "severity" in data
+    assert data["method"] == "occlusion-based, approximate"
+    assert "feature_attributions" in data
+    assert len(data["feature_attributions"]) == 8
+
+
+def test_anomaly_endpoint(sample_feature_dict, contaminated_feature_dict):
+    res_normal = client.post("/anomaly", json=sample_feature_dict)
+    assert res_normal.status_code == 200
+    assert res_normal.json()["severity"] == "NORMAL"
+
+    res_polluted = client.post("/anomaly", json=contaminated_feature_dict)
+    assert res_polluted.status_code == 200
+    assert res_polluted.json()["severity"] in ["WARNING", "CRITICAL"]
+
+
+def test_batch_predict_csv():
+    csv_content = (
+        "pH,Turbidity,Temperature,Dissolved Oxygen,Biochemical Oxygen Demand,Lead,Mercury,Arsenic\n"
+        "7.2,2.5,21.0,7.0,1.5,0.003,0.0002,0.003\n"
+        "4.8,35.0,28.0,2.0,15.0,0.04,0.004,0.03\n"
+    )
+    files = {"file": ("test.csv", io.BytesIO(csv_content.encode("utf-8")), "text/csv")}
+    response = client.post("/predict/batch", files=files)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total_processed"] == 2
+    assert len(data["results"]) == 2

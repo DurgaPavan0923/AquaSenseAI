@@ -1,0 +1,104 @@
+schema_version: "1.0.0"
+
+project:
+  name: "AquaSense AI"
+  environment: "development"
+  random_seed: 42
+
+dataset:
+  kaggle_dataset_slug: "ziya07/water-quality-and-pollution-monitoring-dataset"
+  local_raw_path: "data/raw/water_quality.csv"
+  processed_train_path: "data/processed/train.csv"
+  processed_test_path: "data/processed/test.csv"
+  download_source: "auto"
+
+target:
+  name: "Pollution Level"
+  classes:
+    0: "Good"
+    1: "Moderate"
+    2: "Polluted"
+  class_weights: "balanced"
+
+features:
+  numerical:
+    - name: "pH"
+      unit: "pH units"
+      min_physical: 0.0
+      max_physical: 14.0
+      sensor_fault_delta_max: 2.5
+    - name: "Turbidity"
+      unit: "NTU"
+      min_physical: 0.0
+      max_physical: 500.0
+      sensor_fault_delta_max: 50.0
+    - name: "Temperature"
+      unit: "celsius"
+      min_physical: -5.0
+      max_physical: 60.0
+      sensor_fault_delta_max: 10.0
+    - name: "Dissolved Oxygen"
+      unit: "mg/L"
+      min_physical: 0.0
+      max_physical: 25.0
+      sensor_fault_delta_max: 6.0
+    - name: "Biochemical Oxygen Demand"
+      unit: "mg/L"
+      min_physical: 0.0
+      max_physical: 100.0
+      sensor_fault_delta_max: 20.0
+    - name: "Lead"
+      unit: "mg/L"
+      min_physical: 0.0
+      max_physical: 5.0
+      sensor_fault_delta_max: 0.5
+    - name: "Mercury"
+      unit: "mg/L"
+      min_physical: 0.0
+      max_physical: 1.0
+      sensor_fault_delta_max: 0.1
+    - name: "Arsenic"
+      unit: "mg/L"
+      min_physical: 0.0
+      max_physical: 5.0
+      sensor_fault_delta_max: 0.5
+  optional_identifiers:
+    - "Sample_ID"
+
+split:
+  strategy: "stratified_kfold"
+  test_size: 0.20
+  n_splits: 5
+  shuffle: true
+  random_state: 42
+
+guidelines:
+  who_bis_limits:
+    ph_min: 6.5
+    ph_max: 8.5
+    turbidity_max: 5.0
+    dissolved_oxygen_min: 6.5
+    bod_max: 2.0
+    lead_max: 0.01
+    mercury_max: 0.001
+    arsenic_max: 0.01
+
+models:
+  active_model_type: "random_forest"
+  hyperparameter_search:
+    enabled: true
+    method: "randomized"
+    n_iter: 20
+  bundle_path: "models/model_bundle.joblib"
+  registry_path: "models/registry.json"
+
+conformal:
+  confidence_levels: [0.90, 0.95]
+  default_alpha: 0.10
+  method: "lac"
+
+anomaly:
+  isolation_forest:
+    contamination: 0.03
+    random_state: 42
+  drift_psi_threshold: 0.20

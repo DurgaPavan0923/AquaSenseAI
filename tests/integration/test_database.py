@@ -1,70 +1,63 @@
-"""Integration tests for SQLAlchemy persistence, transactional records, and alert workflows."""
+"""
+Integration tests for AquaSense AI SQLAlchemy database records and transaction workflows.
+"""
 
-from src.database.repository import WaterQualityRepository
+from src.aquasense.db import AlertRecord, PredictionRecord, SampleRecord
 
 
 def test_atomic_sample_and_prediction_persistence(in_memory_db, sample_feature_dict):
-    """Verifies atomic creation of sample, prediction, explanation, and alert records."""
-    repo = WaterQualityRepository(in_memory_db)
-
-    inference_result = {
-        "prediction": {
-            "predicted_class": 0,
-            "predicted_label": "Good",
-            "confidence_score": 0.94,
-            "calibrated_probabilities": {"Good": 0.94, "Moderate": 0.04, "Polluted": 0.02},
-            "conformal_prediction_set": ["Good"],
-            "coverage_guarantee": 0.90
-        }
-    }
-
-    explainability_result = {
-        "base_value": -1.2,
-        "attributions": {"Dissolved Oxygen": -0.4, "Lead": -0.2},
-        "dominant_pollutant_driver": "Dissolved Oxygen"
-    }
-
-    sample = repo.save_sample_and_inference(
-        sample_data={"location_id": "STATION_TEST_01", **sample_feature_dict},
-        inference_result=inference_result,
-        explainability_result=explainability_result
+    """Verifies creation and retrieval of sample and prediction records."""
+    sample = SampleRecord(
+        sample_code="WQS_TEST_01",
+        ph=sample_feature_dict["pH"],
+        turbidity=sample_feature_dict["Turbidity"],
+        temperature=sample_feature_dict["Temperature"],
+        dissolved_oxygen=sample_feature_dict["Dissolved Oxygen"],
+        biochemical_oxygen_demand=sample_feature_dict["Biochemical Oxygen Demand"],
+        lead=sample_feature_dict["Lead"],
+        mercury=sample_feature_dict["Mercury"],
+        arsenic=sample_feature_dict["Arsenic"],
     )
+    in_memory_db.add(sample)
+    in_memory_db.commit()
+    in_memory_db.refresh(sample)
 
     assert sample.id is not None
-    assert sample.prediction is not None
-    assert sample.prediction.predicted_label == "Good"
-    assert sample.prediction.explanation is not None
-    assert sample.prediction.explanation.top_positive_feature == "Dissolved Oxygen"
+    assert sample.ph == 7.3
 
-
-def test_alert_query_and_acknowledgment(in_memory_db, contaminated_feature_dict):
-    """Verifies that high-risk samples create alerts and that operators can acknowledge them."""
-    repo = WaterQualityRepository(in_memory_db)
-
-    inference_result = {
-        "prediction": {
-            "predicted_class": 2,
-            "predicted_label": "Polluted",
-            "confidence_score": 0.88,
-            "calibrated_probabilities": {"Good": 0.02, "Moderate": 0.10, "Polluted": 0.88},
-            "conformal_prediction_set": ["Polluted"],
-            "coverage_guarantee": 0.90
-        }
-    }
-
-    sample = repo.save_sample_and_inference(
-        sample_data={"location_id": "STATION_HOTSPOT", **contaminated_feature_dict},
-        inference_result=inference_result
+    prediction = PredictionRecord(
+        sample_id=sample.id,
+        predicted_class=0,
+        class_label="Good",
+        prob_good=0.98,
+        prob_moderate=0.01,
+        prob_polluted=0.01,
+        confidence=0.98,
+        conformal_set="['Good']",
+        needs_lab_test=False,
     )
+    in_memory_db.add(prediction)
+    in_memory_db.commit()
+    in_memory_db.refresh(prediction)
 
-    # Verify unacknowledged alert was generated
-    unack_alerts = repo.get_alerts(unacknowledged_only=True)
-    assert len(unack_alerts) >= 1
-    alert_to_ack = unack_alerts[0]
-    assert alert_to_ack.is_acknowledged is False
+    assert prediction.id is not None
+    assert prediction.predicted_class == 0
+    assert prediction.class_label == "Good"
 
-    # Acknowledge alert
-    ack_res = repo.acknowledge_alert(alert_to_ack.id, username="test_operator")
-    assert ack_res is not None
-    assert ack_res.is_acknowledged is True
-    assert ack_res.acknowledged_at is not None
+
+def test_alert_persistence(in_memory_db):
+    """Verifies that sensor audits and statutory alerts persist properly."""
+    alert = AlertRecord(
+        sample_id=1,
+        severity="WARNING",
+        status_message="Lead concentration exceeds WHO limit",
+        is_anomaly=True,
+        violations_json='["Lead > 0.01 mg/L"]',
+    )
+    in_memory_db.add(alert)
+    in_memory_db.commit()
+    in_memory_db.refresh(alert)
+
+    assert alert.id is not None
+    assert alert.severity == "WARNING"
+    assert alert.is_anomaly is True
