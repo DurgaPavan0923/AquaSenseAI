@@ -103,7 +103,7 @@ Screening thresholds and sensor rules are cross-referenced against authoritative
 
 ## 8. Serverless API Architecture (< 150 MB Runtime Footprint)
 - **FastAPI Entrypoint (`api/index.py`):** Endpoints `/health`, `/predict`, `/explain`, `/anomaly`, `/models`, and `/predict/batch`.
-- **Runtime Dependencies:** Restricted strictly to `fastapi`, `pydantic`, `numpy`, `scikit-learn`, `joblib`.
+- **Runtime Dependencies:** Restricted strictly to `fastapi`, `pydantic`, `numpy`, `scikit-learn`, `joblib`, and `python-multipart`.
 - **Total Bundle Size:** 136.39 MB (well below 150 MB target and 250 MB ceiling).
 - **Model Bundle Size:** 135.59 KB.
 

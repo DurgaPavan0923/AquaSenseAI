@@ -24,6 +24,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.aquasense.anomaly import AnomalyDetector
+from src.aquasense.features import DomainFeatureEngineer  # noqa: F401
 from src.aquasense.uncertainty import assess_prediction_confidence
 
 # Load Model Bundle
@@ -52,6 +53,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def normalize_vercel_paths(request, call_next):
+    """Normalize Vercel function path prefixes if forwarded."""
+    path = request.scope.get("path", "")
+    if path.startswith("/api/index.py"):
+        new_path = path[len("/api/index.py") :] or "/"
+        request.scope["path"] = new_path
+    return await call_next(request)
 
 FEATURE_ORDER = [
     "pH",
@@ -137,9 +148,27 @@ def sanitize_csv_cell(value: str) -> str:
     return stripped
 
 
+@app.get("/")
+def root_endpoint():
+    """Serves root homepage or API status."""
+    index_path = PROJECT_ROOT / "web" / "index.html"
+    if index_path.exists():
+        from starlette.responses import HTMLResponse
+
+        return HTMLResponse(content=index_path.read_text(encoding="utf-8"))
+    return {
+        "service": "AquaSense AI Serverless API",
+        "status": "healthy",
+        "endpoints": ["/health", "/predict", "/explain", "/anomaly", "/models"],
+    }
+
+
 @app.get("/health")
+@app.get("/health/")
 @app.get("/api/health")
+@app.get("/api/health/")
 @app.get("/api")
+@app.get("/api/")
 def health_check() -> dict[str, Any]:
     """Returns server and active model health status."""
     is_model_loaded = bundle is not None
@@ -153,7 +182,9 @@ def health_check() -> dict[str, Any]:
 
 
 @app.get("/models")
+@app.get("/models/")
 @app.get("/api/models")
+@app.get("/api/models/")
 def get_model_metadata() -> dict[str, Any]:
     """Returns details and verification metrics of the active screening model."""
     if not bundle:
@@ -184,7 +215,9 @@ def get_model_metadata() -> dict[str, Any]:
 
 
 @app.post("/predict")
+@app.post("/predict/")
 @app.post("/api/predict")
+@app.post("/api/predict/")
 def predict_water_quality(sample: WaterSampleInput) -> dict[str, Any]:
     """
     Performs calibrated multi-class screening with Inductive Conformal Prediction set,
@@ -262,7 +295,9 @@ def predict_water_quality(sample: WaterSampleInput) -> dict[str, Any]:
 
 
 @app.post("/explain")
+@app.post("/explain/")
 @app.post("/api/explain")
+@app.post("/api/explain/")
 def explain_prediction(sample: WaterSampleInput) -> dict[str, Any]:
     """
     Computes local feature attribution via counterfactual occlusion against training medians.
@@ -300,7 +335,9 @@ def explain_prediction(sample: WaterSampleInput) -> dict[str, Any]:
 
 
 @app.post("/anomaly")
+@app.post("/anomaly/")
 @app.post("/api/anomaly")
+@app.post("/api/anomaly/")
 def audit_anomalies(sample: WaterSampleInput) -> dict[str, Any]:
     """
     Audits single sample against physical sensor boundaries and WHO/BIS statutory drinking water thresholds.
@@ -311,7 +348,9 @@ def audit_anomalies(sample: WaterSampleInput) -> dict[str, Any]:
 
 
 @app.post("/predict/batch")
+@app.post("/predict/batch/")
 @app.post("/api/predict/batch")
+@app.post("/api/predict/batch/")
 async def predict_batch_csv(file: UploadFile = File(...)) -> dict[str, Any]:
     """
     Processes batch CSV file upload with file size validation, row limits, and CSV sanitization.
@@ -439,5 +478,9 @@ WEB_DIR = PROJECT_ROOT / "web"
 if WEB_DIR.exists():
     from starlette.staticfiles import StaticFiles
 
-    app.mount("/", StaticFiles(directory=str(WEB_DIR), html=True), name="web_static")
+    figures_dir = WEB_DIR / "figures"
+    if figures_dir.exists():
+        app.mount("/figures", StaticFiles(directory=str(figures_dir)), name="figures")
+
+    app.mount("/", StaticFiles(directory=str(WEB_DIR), html=True), name="web_root")
 

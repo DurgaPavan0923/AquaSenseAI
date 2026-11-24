@@ -20,6 +20,7 @@ RUNTIME_PACKAGES = [
     "sklearn",
     "scipy",
     "joblib",
+    "multipart",
 ]
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
