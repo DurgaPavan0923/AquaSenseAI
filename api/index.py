@@ -55,6 +55,23 @@ app.add_middleware(
 )
 
 
+from starlette.responses import JSONResponse
+
+
+@app.exception_handler(404)
+async def custom_404_handler(request: Request, exc):
+    return JSONResponse(
+        status_code=404,
+        content={
+            "error": "404 Not Found",
+            "scope_path": request.scope.get("path"),
+            "scope_root_path": request.scope.get("root_path"),
+            "url_path": str(request.url.path),
+            "headers": dict(request.headers),
+        },
+    )
+
+
 @app.middleware("http")
 async def normalize_vercel_paths(request: Request, call_next):
     """Normalize Vercel function path prefixes if forwarded."""
