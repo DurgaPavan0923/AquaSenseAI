@@ -4,8 +4,33 @@ Verifies all pages, interactive states, theme toggle, form validation,
 batch CSV upload, results tabs, diagnostic lightbox, accordions, and mobile responsiveness.
 """
 
+import urllib.request
+
 import pytest
-from playwright.sync_api import Page, expect
+
+try:
+    from playwright.sync_api import Page, expect
+    HAS_PLAYWRIGHT = True
+except ImportError:
+    HAS_PLAYWRIGHT = False
+    Page = None  # type: ignore[assignment, misc]
+    expect = None  # type: ignore[assignment]
+
+
+def _check_server_active() -> bool:
+    try:
+        with urllib.request.urlopen("http://127.0.0.1:8000/health", timeout=1) as resp:
+            return resp.status == 200
+    except Exception:
+        return False
+
+
+SERVER_ACTIVE = _check_server_active()
+
+pytestmark = pytest.mark.skipif(
+    not (HAS_PLAYWRIGHT and SERVER_ACTIVE),
+    reason="Playwright E2E tests require playwright and an active server at http://127.0.0.1:8000",
+)
 
 BASE_URL = "http://127.0.0.1:8000"
 
