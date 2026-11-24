@@ -9,12 +9,13 @@ import datetime
 import io
 import json
 import sys
+import urllib.parse
 from pathlib import Path
 from typing import Any
 
 import joblib
 import numpy as np
-from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -55,14 +56,34 @@ app.add_middleware(
 )
 
 
-@app.middleware("http")
-async def normalize_vercel_paths(request: Request, call_next):
-    """Normalize Vercel function path from query string or forwarded path."""
-    route_param = request.query_params.get("_route")
-    if route_param:
-        clean_route = "/" + route_param.lstrip("/")
-        request.scope["path"] = clean_route
-    return await call_next(request)
+class VercelRouteMiddleware:
+    """Raw ASGI middleware to normalize request paths rewritten by Vercel serverless."""
+
+    def __init__(self, app: Any):
+        self.app = app
+
+    async def __call__(self, scope: dict[str, Any], receive: Any, send: Any) -> None:
+        if scope["type"] == "http":
+            qs = scope.get("query_string", b"").decode("latin-1")
+            route_applied = False
+            if qs:
+                params = urllib.parse.parse_qs(qs)
+                route = params.get("_route", [None])[0]
+                if route:
+                    clean_path = "/" + route.lstrip("/")
+                    scope["path"] = clean_path
+                    scope["raw_path"] = clean_path.encode("latin-1")
+                    route_applied = True
+            if not route_applied:
+                path = scope.get("path", "")
+                if path.startswith("/api/index.py"):
+                    clean_path = "/" + path[len("/api/index.py") :].lstrip("/")
+                    scope["path"] = clean_path
+                    scope["raw_path"] = clean_path.encode("latin-1")
+        await self.app(scope, receive, send)
+
+
+app.add_middleware(VercelRouteMiddleware)
 
 FEATURE_ORDER = [
     "pH",
