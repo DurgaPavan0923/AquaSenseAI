@@ -24,7 +24,13 @@
         <img src="/favicon.svg" alt="AquaSense AI Logo" class="brand-logo" width="28" height="28">
         <span>AquaSense AI</span>
       </a>
-      <button class="mobile-nav-toggle" id="mobile-nav-btn" aria-label="Toggle Navigation Menu">Menu</button>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Toggle dark mode" title="Toggle dark mode">
+          <svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+          <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+        <button class="mobile-nav-toggle" id="mobile-nav-btn" aria-label="Toggle Navigation Menu">Menu</button>
+      </div>
       <nav aria-label="Main Navigation">
         <ul class="nav-links" id="nav-menu">
           <li><a href="/index.html" class="active">Home</a></li>
@@ -50,8 +56,8 @@
           AquaSense AI provides calibrated multi-parameter water quality classification, inductive conformal uncertainty estimation, and local counterfactual parameter attributions to support rapid screening and early warning detection across municipal and industrial watersheds.
         </p>
         <div class="hero-actions">
-          <a href="/analyze.html" class="btn btn-primary">Start Water Analysis</a>
-          <a href="/results.html" class="btn btn-secondary">Explore Research</a>
+          <a href="/analyze.html" class="btn btn-primary" id="btn-start-analysis">Start Water Analysis</a>
+          <a href="/results.html" class="btn btn-secondary" id="btn-explore-research">Explore Research</a>
         </div>
         <div class="hero-batch-link">
           Need high-throughput auditing? Run <a href="/batch.html">Batch CSV Screening</a>

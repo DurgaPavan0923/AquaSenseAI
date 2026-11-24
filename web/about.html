@@ -24,7 +24,13 @@
         <img src="/favicon.svg" alt="AquaSense AI Logo" class="brand-logo">
         <span>AquaSense AI</span>
       </a>
-      <button class="mobile-nav-toggle" id="mobile-nav-btn" aria-label="Toggle Navigation Menu">Menu</button>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Toggle dark mode" title="Toggle dark mode">
+          <svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+          <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+        <button class="mobile-nav-toggle" id="mobile-nav-btn" aria-label="Toggle Navigation Menu">Menu</button>
+      </div>
       <nav>
         <ul class="nav-links" id="nav-menu">
           <li><a href="/index.html">Home</a></li>
@@ -44,203 +50,233 @@
     <div style="margin-bottom: 24px;">
       <h1>Research Methodology & Platform Architecture</h1>
       <p style="margin-bottom: 0;">
-        Senior Design Research Project for course <strong>URP4201 Research Methodology</strong>.
+        Senior Design Research Project for course <strong>URP4201 Research Methodology</strong>. Explore the sections below to review academic details, experimental design, and statutory frameworks.
       </p>
     </div>
 
-    <!-- Academic Team Card -->
-    <div class="card" style="margin-bottom: 32px;">
-      <h2>Academic Information & Authors</h2>
-      <div style="margin-bottom: 12px;">
-        <strong>Course:</strong> Research Methodology (URP4201)<br>
-        <strong>Project Supervisor:</strong> Dr. Alok Ku. Pani
-      </div>
-      <div>
-        <strong>Student Research Team:</strong>
-        <div class="table-wrapper" style="margin-top: 10px;">
-          <table>
-            <thead>
-              <tr>
-                <th>Student Author</th>
-                <th>Registration Number</th>
-                <th>Academic Department</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Ayusman Das</td>
-                <td>2341004073</td>
-                <td>CSE (AI/ML)</td>
-              </tr>
-              <tr>
-                <td>Selina Mohanty</td>
-                <td>2341013299</td>
-                <td>CSE (AI/ML)</td>
-              </tr>
-              <tr>
-                <td>Rajana Durga Pavan Kumar</td>
-                <td>2341011099</td>
-                <td>CSE (AI/ML)</td>
-              </tr>
-              <tr>
-                <td>Akanshaa Mohanta</td>
-                <td>2341013229</td>
-                <td>CSE (AI/ML)</td>
-              </tr>
-            </tbody>
-          </table>
+    <!-- Interactive Accessible Accordion Group -->
+    <div class="accordion-group">
+
+      <!-- Accordion 1: Academic Authors -->
+      <div class="accordion-item">
+        <button class="accordion-header" id="acc-header-team" aria-expanded="true" aria-controls="acc-body-team">
+          <span>Academic Information & Authors</span>
+          <span class="accordion-icon">+</span>
+        </button>
+        <div id="acc-body-team" class="accordion-body" role="region" aria-labelledby="acc-header-team">
+          <div style="margin-bottom: 12px;">
+            <strong>Course:</strong> Research Methodology (URP4201)<br>
+            <strong>Project Supervisor:</strong> Dr. Alok Ku. Pani
+          </div>
+          <div>
+            <strong>Student Research Team:</strong>
+            <div class="table-wrapper" style="margin-top: 10px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Student Author</th>
+                    <th>Registration Number</th>
+                    <th>Academic Department</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Ayusman Das</td>
+                    <td>2341004073</td>
+                    <td>CSE (AI/ML)</td>
+                  </tr>
+                  <tr>
+                    <td>Selina Mohanty</td>
+                    <td>2341013299</td>
+                    <td>CSE (AI/ML)</td>
+                  </tr>
+                  <tr>
+                    <td>Rajana Durga Pavan Kumar</td>
+                    <td>2341011099</td>
+                    <td>CSE (AI/ML)</td>
+                  </tr>
+                  <tr>
+                    <td>Akanshaa Mohanta</td>
+                    <td>2341013229</td>
+                    <td>CSE (AI/ML)</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
+
+      <!-- Accordion 2: Dataset Origin & Audit -->
+      <div class="accordion-item">
+        <button class="accordion-header" id="acc-header-dataset" aria-expanded="false" aria-controls="acc-body-dataset">
+          <span>Dataset Origin & Labeling Rule Audit</span>
+          <span class="accordion-icon">+</span>
+        </button>
+        <div id="acc-body-dataset" class="accordion-body" role="region" aria-labelledby="acc-header-dataset" hidden>
+          <p>
+            <strong>Dataset Source:</strong> Kaggle Water Quality & Pollution Monitoring Dataset (1,000 observations, 8 numerical features, 1 target label).
+          </p>
+          <p>
+            <strong>Investigation of Target Construction:</strong> Statistical audit reveals that the target risk classifications (Good: 559, Moderate: 198, Polluted: 243) were generated using composite multi-parameter threshold criteria based on standard water quality index guidelines (e.g. Dissolved Oxygen &lt; 5.2 mg/L, BOD &gt; 4.5 mg/L, Turbidity &gt; 8.0 NTU, and elevated heavy metal concentrations define Polluted samples).
+          </p>
+          <div style="background-color: var(--bg-primary); border-left: 4px solid var(--accent); padding: 14px 18px; margin: 16px 0; border-radius: 0 4px 4px 0;">
+            <strong>Scientific Research Limitation Notice:</strong> Because the ground-truth labels in this dataset are rule-derived from the input parameters, the machine learning models learn to approximate and reproduce these composite labeling rules with high mathematical fidelity (Macro-F1: 99.43%), rather than discovering novel unmeasured biochemical contaminants. The model functions as a rapid, automated screening triage tool, and outputs must not be interpreted as certified laboratory validation.
+          </div>
+          <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 0;">
+            <strong>Data Leakage Prevention:</strong> The dataset contains 0 duplicate feature rows. All preprocessors (StandardScaler, DomainFeatureEngineer) are fit exclusively on the training partition. Four pairwise disjoint partitions ensure zero contamination.
+          </p>
+        </div>
+      </div>
+
+      <!-- Accordion 3: 4-Way Partition -->
+      <div class="accordion-item">
+        <button class="accordion-header" id="acc-header-partition" aria-expanded="false" aria-controls="acc-body-partition">
+          <span>4-Way Disjoint Partition Methodology</span>
+          <span class="accordion-icon">+</span>
+        </button>
+        <div id="acc-body-partition" class="accordion-body" role="region" aria-labelledby="acc-header-partition" hidden>
+          <p>
+            To ensure strict exchangeability and prevent overoptimistic conformal calibration, the observations are partitioned into four distinct splits:
+          </p>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Partition</th>
+                  <th>Proportion</th>
+                  <th>Sample Size</th>
+                  <th>Methodological Purpose</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Base Model Training</strong></td>
+                  <td>50%</td>
+                  <td>500 samples</td>
+                  <td>Fits feature scaling, domain ratio calculations, and tree structures.</td>
+                </tr>
+                <tr>
+                  <td><strong>Probability Calibration</strong></td>
+                  <td>15%</td>
+                  <td>150 samples</td>
+                  <td>Calibrates sigmoid Platt scaling probabilities using pre-fit CV splits.</td>
+                </tr>
+                <tr>
+                  <td><strong>Conformal Calibration</strong></td>
+                  <td>15%</td>
+                  <td>150 samples</td>
+                  <td>Derives non-conformity threshold q_hat without contamination from model fitting.</td>
+                </tr>
+                <tr>
+                  <td><strong>Holdout Test Partition</strong></td>
+                  <td>20%</td>
+                  <td>200 samples</td>
+                  <td>Independent final validation of empirical coverage and classification metrics.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Accordion 4: Authoritative Standards -->
+      <div class="accordion-item">
+        <button class="accordion-header" id="acc-header-standards" aria-expanded="false" aria-controls="acc-body-standards">
+          <span>Authoritative Water Quality Standards (WHO / BIS / EPA / CPCB)</span>
+          <span class="accordion-icon">+</span>
+        </button>
+        <div id="acc-body-standards" class="accordion-body" role="region" aria-labelledby="acc-header-standards" hidden>
+          <p>
+            Parameters are evaluated against authoritative criteria from the World Health Organization (WHO), the US Environmental Protection Agency (EPA), the Bureau of Indian Standards (BIS IS 10500:2012), and the Central Pollution Control Board (CPCB):
+          </p>
+          
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Applicable Domain</th>
+                  <th>Statutory Limit</th>
+                  <th>Authoritative Standard</th>
+                  <th>Scientific Rationale</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>pH</strong></td>
+                  <td>Drinking & Surface Water</td>
+                  <td>6.50 to 8.50</td>
+                  <td>WHO 4th Ed. / BIS IS 10500:2012</td>
+                  <td>pH &lt; 6.5 accelerates corrosion; pH &gt; 8.5 impedes chlorination efficiency.</td>
+                </tr>
+                <tr>
+                  <td><strong>Turbidity</strong></td>
+                  <td>Drinking Water</td>
+                  <td>&le; 5.0 NTU</td>
+                  <td>WHO Guidelines / BIS IS 10500:2012</td>
+                  <td>Colloidal suspension shields pathogenic microorganisms from disinfection.</td>
+                </tr>
+                <tr>
+                  <td><strong>Dissolved Oxygen</strong></td>
+                  <td>Surface Water & Ecology</td>
+                  <td>&ge; 6.50 mg/L</td>
+                  <td>CPCB Class A / EPA Freshwater Criteria</td>
+                  <td>Critical for aquatic organism respiration and biological oxidation of organic wastes.</td>
+                </tr>
+                <tr>
+                  <td><strong>BOD (5-Day)</strong></td>
+                  <td>Surface Water Quality</td>
+                  <td>&le; 2.00 mg/L</td>
+                  <td>CPCB Class A Drinking Source Benchmark</td>
+                  <td>High biochemical oxygen demand indicates organic waste and sewage contamination.</td>
+                </tr>
+                <tr>
+                  <td><strong>Lead (Pb)</strong></td>
+                  <td>Drinking Water Toxicant</td>
+                  <td>&le; 0.010 mg/L</td>
+                  <td>WHO Guideline / BIS IS 10500:2012</td>
+                  <td>Cumulative neurotoxin causing neurological and renal damage upon chronic exposure.</td>
+                </tr>
+                <tr>
+                  <td><strong>Mercury (Hg)</strong></td>
+                  <td>Drinking Water Toxicant</td>
+                  <td>&le; 0.001 mg/L</td>
+                  <td>BIS IS 10500:2012 / US EPA MCL</td>
+                  <td>Severe nephrotoxin and neurotoxin with bioaccumulative organic pathways.</td>
+                </tr>
+                <tr>
+                  <td><strong>Arsenic (As)</strong></td>
+                  <td>Drinking Water Toxicant</td>
+                  <td>&le; 0.010 mg/L</td>
+                  <td>WHO Provisional / BIS IS 10500:2012</td>
+                  <td>Group 1 human carcinogen associated with skin lesions and systemic cancers.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Accordion 5: Responsible Use & Limitations -->
+      <div class="accordion-item">
+        <button class="accordion-header" id="acc-header-limits" aria-expanded="false" aria-controls="acc-body-limits">
+          <span>Responsible Use & Statutory Screening Protocol</span>
+          <span class="accordion-icon">+</span>
+        </button>
+        <div id="acc-body-limits" class="accordion-body" role="region" aria-labelledby="acc-header-limits" hidden>
+          <p>
+            AquaSense AI provides upfront rapid screening support to triage municipal and field samples. It does not replace certified laboratory testing. The following restrictions apply:
+          </p>
+          <ul style="margin-left: 20px; font-size: 0.92rem; color: var(--text-muted); line-height: 1.7;">
+            <li>Microbiological pathogens (Escherichia coli, Cryptosporidium, Giardia) are not measured directly and require certified membrane filtration laboratory incubation.</li>
+            <li>Unmonitored toxic chemicals (pesticides, PFAS, radionuclides) require mass spectrometry (GC-MS / LC-MS) analysis.</li>
+            <li>Any sample flagged with "Needs laboratory test" or an anomalous sensor reading must be routed to an accredited environmental testing facility prior to municipal or potable distribution.</li>
+          </ul>
+        </div>
+      </div>
+
     </div>
-
-    <!-- Critical Dataset & Labeling Audit -->
-    <section class="card" style="margin-bottom: 32px;">
-      <h2>Dataset Origin & Labeling Rule Audit</h2>
-      <p>
-        <strong>Dataset Source:</strong> Kaggle Water Quality & Pollution Monitoring Dataset (1,000 observations, 8 numerical features, 1 target label).
-      </p>
-      <p>
-        <strong>Investigation of Target Construction:</strong> Statistical audit reveals that the target risk classifications (Good: 559, Moderate: 198, Polluted: 243) were generated using composite multi-parameter threshold criteria based on standard water quality index guidelines (e.g. Dissolved Oxygen &lt; 5.2 mg/L, BOD &gt; 4.5 mg/L, Turbidity &gt; 8.0 NTU, and elevated heavy metal concentrations define Polluted samples).
-      </p>
-      <div style="background-color: var(--bg-primary); border-left: 4px solid var(--accent); padding: 14px 18px; margin: 16px 0; border-radius: 0 4px 4px 0;">
-        <strong>Scientific Research Limitation Notice:</strong> Because the ground-truth labels in this dataset are rule-derived from the input parameters, the machine learning models learn to approximate and reproduce these composite labeling rules with high mathematical fidelity (Macro-F1: 99.43%), rather than discovering novel unmeasured biochemical contaminants. The model functions as a rapid, automated screening triage tool, and outputs must not be interpreted as certified laboratory validation.
-      </div>
-      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 0;">
-        <strong>Data Leakage Prevention:</strong> The dataset contains 0 duplicate feature rows. All preprocessors (StandardScaler, DomainFeatureEngineer) are fit exclusively on the training partition. Four pairwise disjoint partitions ensure zero contamination.
-      </p>
-    </section>
-
-    <!-- 4-Way Experimental Design -->
-    <section class="card" style="margin-bottom: 32px;">
-      <h2>4-Way Partition Methodology</h2>
-      <p>
-        To ensure strict exchangeability and prevent overoptimistic conformal calibration, the observations are partitioned into four distinct splits:
-      </p>
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Partition</th>
-              <th>Proportion</th>
-              <th>Sample Size</th>
-              <th>Methodological Purpose</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Base Model Training</strong></td>
-              <td>50%</td>
-              <td>500 samples</td>
-              <td>Fits feature scaling, domain ratio calculations, and tree structures.</td>
-            </tr>
-            <tr>
-              <td><strong>Probability Calibration</strong></td>
-              <td>15%</td>
-              <td>150 samples</td>
-              <td>Calibrates sigmoid Platt scaling probabilities using pre-fit CV splits.</td>
-            </tr>
-            <tr>
-              <td><strong>Conformal Calibration</strong></td>
-              <td>15%</td>
-              <td>150 samples</td>
-              <td>Derives non-conformity threshold q_hat without contamination from model fitting.</td>
-            </tr>
-            <tr>
-              <td><strong>Holdout Test Partition</strong></td>
-              <td>20%</td>
-              <td>200 samples</td>
-              <td>Independent final validation of empirical coverage and classification metrics.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- Authoritative Environmental Standards -->
-    <section class="card" id="standards" style="margin-bottom: 32px;">
-      <h2>Authoritative Water Quality Standards</h2>
-      <p>
-        Parameters are evaluated against authoritative criteria from the World Health Organization (WHO), the US Environmental Protection Agency (EPA), the Bureau of Indian Standards (BIS IS 10500:2012), and the Central Pollution Control Board (CPCB):
-      </p>
-      
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Parameter</th>
-              <th>Applicable Domain</th>
-              <th>Statutory Limit</th>
-              <th>Authoritative Standard</th>
-              <th>Scientific Rationale</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>pH</strong></td>
-              <td>Drinking & Surface Water</td>
-              <td>6.50 to 8.50</td>
-              <td>WHO 4th Ed. / BIS IS 10500:2012</td>
-              <td>pH &lt; 6.5 accelerates corrosion; pH &gt; 8.5 impedes chlorination efficiency.</td>
-            </tr>
-            <tr>
-              <td><strong>Turbidity</strong></td>
-              <td>Drinking Water</td>
-              <td>&le; 5.0 NTU</td>
-              <td>WHO Guidelines / BIS IS 10500:2012</td>
-              <td>Colloidal suspension shields pathogenic microorganisms from disinfection.</td>
-            </tr>
-            <tr>
-              <td><strong>Dissolved Oxygen</strong></td>
-              <td>Surface Water & Ecology</td>
-              <td>&ge; 6.50 mg/L</td>
-              <td>CPCB Class A / EPA Freshwater Criteria</td>
-              <td>Critical for aquatic organism respiration and biological oxidation of organic wastes.</td>
-            </tr>
-            <tr>
-              <td><strong>BOD (5-Day)</strong></td>
-              <td>Surface Water Quality</td>
-              <td>&le; 2.00 mg/L</td>
-              <td>CPCB Class A Drinking Source Benchmark</td>
-              <td>High biochemical oxygen demand indicates organic waste and sewage contamination.</td>
-            </tr>
-            <tr>
-              <td><strong>Lead (Pb)</strong></td>
-              <td>Drinking Water Toxicant</td>
-              <td>&le; 0.010 mg/L</td>
-              <td>WHO Guideline / BIS IS 10500:2012</td>
-              <td>Cumulative neurotoxin causing neurological and renal damage upon chronic exposure.</td>
-            </tr>
-            <tr>
-              <td><strong>Mercury (Hg)</strong></td>
-              <td>Drinking Water Toxicant</td>
-              <td>&le; 0.001 mg/L</td>
-              <td>BIS IS 10500:2012 / US EPA MCL</td>
-              <td>Severe nephrotoxin and neurotoxin with bioaccumulative organic pathways.</td>
-            </tr>
-            <tr>
-              <td><strong>Arsenic (As)</strong></td>
-              <td>Drinking Water Toxicant</td>
-              <td>&le; 0.010 mg/L</td>
-              <td>WHO Provisional / BIS IS 10500:2012</td>
-              <td>Group 1 human carcinogen associated with skin lesions and systemic cancers.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- Limitations & Responsible Use -->
-    <section class="card" style="margin-bottom: 32px;">
-      <h2>Responsible Use & Screening Protocol</h2>
-      <p>
-        AquaSense AI provides upfront rapid screening support to triage municipal and field samples. It does not replace certified laboratory testing. The following restrictions apply:
-      </p>
-      <ul style="margin-left: 20px; font-size: 0.92rem; color: var(--text-muted); line-height: 1.7;">
-        <li>Microbiological pathogens (Escherichia coli, Cryptosporidium, Giardia) are not measured directly and require certified membrane filtration laboratory incubation.</li>
-        <li>Unmonitored toxic chemicals (pesticides, PFAS, radionuclides) require mass spectrometry (GC-MS / LC-MS) analysis.</li>
-        <li>Any sample flagged with "Needs laboratory test" or an anomalous sensor reading must be routed to an accredited environmental testing facility prior to municipal or potable distribution.</li>
-      </ul>
-    </section>
 
   </main>
 

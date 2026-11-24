@@ -1,16 +1,29 @@
 /**
  * AquaSense AI Production Client Logic
  * Handles single-sample screening, batch CSV processing, local occlusion attribution,
- * geographic monitoring maps, session history management, and PDF report export.
- * Strict Design: Zero emojis, zero em dashes, safe DOM manipulation, WCAG AA compliant.
+ * geographic monitoring maps, session history management, accessible lightboxes, accordions,
+ * and WCAG AA theme switching.
+ * Strict Design: Zero emojis, zero em dashes, zero gradients, border-radius <= 4px.
  */
 
+// 0. Immediate Theme Initialization to prevent theme flicker
+(function initTheme() {
+  const saved = localStorage.getItem("aquasense_theme");
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const theme = saved || (prefersDark ? "dark" : "light");
+  document.documentElement.setAttribute("data-theme", theme);
+})();
+
 document.addEventListener("DOMContentLoaded", () => {
+  setupThemeToggle();
   setupNavigation();
   setupHomepagePreview();
   setupSinglePredictionForm();
   setupBatchUploadForm();
   setupGeographicMap();
+  setupFigureLightbox();
+  setupAccordions();
+  setupResultsTabs();
   loadSessionHistory();
 });
 
@@ -46,7 +59,54 @@ async function callApi(endpoint, options) {
   return res;
 }
 
-// 1. Mobile Navigation
+// 1. Theme Toggle
+function setupThemeToggle() {
+  const toggleBtns = document.querySelectorAll(".theme-toggle-btn");
+  if (toggleBtns.length === 0) return;
+
+  const updateIcons = (theme) => {
+    toggleBtns.forEach((btn) => {
+      btn.setAttribute("aria-label", theme === "dark" ? "Switch to light theme" : "Switch to dark theme");
+      btn.setAttribute("title", theme === "dark" ? "Switch to light theme" : "Switch to dark theme");
+      const sun = btn.querySelector(".sun-icon");
+      const moon = btn.querySelector(".moon-icon");
+      if (sun && moon) {
+        if (theme === "dark") {
+          sun.style.display = "inline";
+          moon.style.display = "none";
+        } else {
+          sun.style.display = "none";
+          moon.style.display = "inline";
+        }
+      }
+    });
+  };
+
+  const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+  updateIcons(currentTheme);
+
+  toggleBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const active = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+      const next = active === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      localStorage.setItem("aquasense_theme", next);
+      updateIcons(next);
+    });
+  });
+
+  if (window.matchMedia) {
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+      if (!localStorage.getItem("aquasense_theme")) {
+        const next = e.matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", next);
+        updateIcons(next);
+      }
+    });
+  }
+}
+
+// 2. Mobile Navigation
 function setupNavigation() {
   const toggleBtn = document.getElementById("mobile-nav-btn");
   const navMenu = document.getElementById("nav-menu");
@@ -57,7 +117,7 @@ function setupNavigation() {
   }
 }
 
-// 2. Homepage Interactive Dashboard Preview
+// 3. Homepage Interactive Dashboard Preview
 function setupHomepagePreview() {
   const btnGood = document.getElementById("preview-btn-good");
   const btnMod = document.getElementById("preview-btn-mod");
@@ -132,7 +192,7 @@ function setupHomepagePreview() {
   btnPoll.addEventListener("click", () => updatePreview(samplePoll, btnPoll));
 }
 
-// 3. Single Sample Prediction Form
+// 4. Single Sample Prediction Form with Live Inline Range Validation
 function setupSinglePredictionForm() {
   const form = document.getElementById("prediction-form");
   if (!form) return;
@@ -144,6 +204,60 @@ function setupSinglePredictionForm() {
   const btnQuickRun = document.getElementById("btn-quick-run");
   const errorBox = document.getElementById("form-error-box");
   const btnPrintReport = document.getElementById("btn-print-report");
+  const submitBtn = document.getElementById("btn-submit-screening");
+
+  // Input references and validation rules
+  const validationRules = [
+    { id: "input-ph", errId: "err-ph", min: 0.0, max: 14.0, name: "pH" },
+    { id: "input-turbidity", errId: "err-turbidity", min: 0.0, max: 500.0, name: "Turbidity" },
+    { id: "input-temp", errId: "err-temp", min: -5.0, max: 60.0, name: "Temperature" },
+    { id: "input-do", errId: "err-do", min: 0.0, max: 25.0, name: "Dissolved Oxygen" },
+    { id: "input-bod", errId: "err-bod", min: 0.0, max: 100.0, name: "BOD" },
+    { id: "input-lead", errId: "err-lead", min: 0.0, max: 5.0, name: "Lead" },
+    { id: "input-mercury", errId: "err-mercury", min: 0.0, max: 1.0, name: "Mercury" },
+    { id: "input-arsenic", errId: "err-arsenic", min: 0.0, max: 5.0, name: "Arsenic" },
+  ];
+
+  function validateFormFields() {
+    let allValid = true;
+    validationRules.forEach((rule) => {
+      const input = document.getElementById(rule.id);
+      const err = document.getElementById(rule.errId);
+      if (!input) return;
+
+      const val = parseFloat(input.value);
+      const isInvalid = isNaN(val) || val < rule.min || val > rule.max;
+
+      if (isInvalid) {
+        allValid = false;
+        input.classList.add("is-invalid");
+        input.classList.remove("is-valid");
+        if (err) {
+          err.classList.add("visible");
+          err.textContent = `${rule.name} must be a number between ${rule.min} and ${rule.max}.`;
+        }
+      } else {
+        input.classList.remove("is-invalid");
+        input.classList.add("is-valid");
+        if (err) {
+          err.classList.remove("visible");
+        }
+      }
+    });
+
+    if (submitBtn) {
+      submitBtn.disabled = !allValid;
+    }
+    return allValid;
+  }
+
+  validationRules.forEach((rule) => {
+    const input = document.getElementById(rule.id);
+    if (input) {
+      input.addEventListener("input", validateFormFields);
+      input.addEventListener("change", validateFormFields);
+    }
+  });
 
   // Sample templates
   const templates = {
@@ -182,15 +296,17 @@ function setupSinglePredictionForm() {
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
       dtInput.value = now.toISOString().slice(0, 16);
     }
+    validateFormFields();
   }
 
-  // Set initial datetime
+  // Set initial datetime and run validation check
   const dtInput = document.getElementById("input-datetime");
   if (dtInput) {
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     dtInput.value = now.toISOString().slice(0, 16);
   }
+  validateFormFields();
 
   if (btnLoadPotable) btnLoadPotable.addEventListener("click", () => setFormValues(templates.potable));
   if (btnLoadRunoff) btnLoadRunoff.addEventListener("click", () => setFormValues(templates.runoff));
@@ -215,6 +331,14 @@ function setupSinglePredictionForm() {
     e.preventDefault();
     if (errorBox) errorBox.style.display = "none";
 
+    if (!validateFormFields()) {
+      if (errorBox) {
+        errorBox.textContent = "Please correct all invalid parameter values before running screening.";
+        errorBox.style.display = "block";
+      }
+      return;
+    }
+
     const sampleId = document.getElementById("input-sample-id").value.trim() || "SAMP-UNSPECIFIED";
     const location = document.getElementById("input-location").value.trim() || "Field Station";
     const collectionTime = document.getElementById("input-datetime").value || new Date().toISOString();
@@ -227,25 +351,6 @@ function setupSinglePredictionForm() {
     const lead = parseFloat(document.getElementById("input-lead").value);
     const merc = parseFloat(document.getElementById("input-mercury").value);
     const ars = parseFloat(document.getElementById("input-arsenic").value);
-
-    // Validation
-    const errors = [];
-    if (isNaN(ph) || ph < 0 || ph > 14) errors.push("pH must be a valid number between 0.0 and 14.0.");
-    if (isNaN(turb) || turb < 0 || turb > 500) errors.push("Turbidity must be between 0.0 and 500.0 NTU.");
-    if (isNaN(temp) || temp < -5 || temp > 60) errors.push("Temperature must be between -5.0 and 60.0 deg C.");
-    if (isNaN(dOxygen) || dOxygen < 0 || dOxygen > 25) errors.push("Dissolved Oxygen must be between 0.0 and 25.0 mg/L.");
-    if (isNaN(bod) || bod < 0 || bod > 100) errors.push("BOD must be between 0.0 and 100.0 mg/L.");
-    if (isNaN(lead) || lead < 0 || lead > 5) errors.push("Lead must be between 0.0 and 5.0 mg/L.");
-    if (isNaN(merc) || merc < 0 || merc > 1) errors.push("Mercury must be between 0.0 and 1.0 mg/L.");
-    if (isNaN(ars) || ars < 0 || ars > 5) errors.push("Arsenic must be between 0.0 and 5.0 mg/L.");
-
-    if (errors.length > 0) {
-      if (errorBox) {
-        errorBox.textContent = errors.join(" ");
-        errorBox.style.display = "block";
-      }
-      return;
-    }
 
     const payload = {
       sample_id: sampleId,
@@ -261,7 +366,6 @@ function setupSinglePredictionForm() {
       Arsenic: ars,
     };
 
-    const submitBtn = document.getElementById("btn-submit-screening");
     if (submitBtn) {
       submitBtn.disabled = true;
       submitBtn.textContent = "Processing Calibrated Screening Inference...";
@@ -315,7 +419,6 @@ function setupSinglePredictionForm() {
     }
   });
 
-  // Print PDF Assessment Report Trigger
   if (btnPrintReport) {
     btnPrintReport.addEventListener("click", () => {
       window.print();
@@ -340,10 +443,10 @@ function renderAssessmentResult(data, sample, expData) {
   const pPoll = (data.probabilities.Polluted * 100).toFixed(1);
 
   const labFlagHtml = data.needs_laboratory_test
-    ? `<div style="background-color: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 12px; border-radius: 4px; margin-top: 14px; font-weight: 600; font-size: 0.9rem;">
+    ? `<div style="background-color: var(--status-polluted-bg); border: 1px solid var(--status-polluted-border); color: var(--status-polluted); padding: 12px; border-radius: 4px; margin-top: 14px; font-weight: 600; font-size: 0.9rem;">
         Action Required: Certified Laboratory Testing Recommended (${escapeHtml(data.confidence_assessment)})
        </div>`
-    : `<div style="background-color: #dcfce7; border: 1px solid #86efac; color: #166534; padding: 10px; border-radius: 4px; margin-top: 14px; font-size: 0.88rem; font-weight: 600;">
+    : `<div style="background-color: var(--status-good-bg); border: 1px solid var(--status-good-border); color: var(--status-good); padding: 10px; border-radius: 4px; margin-top: 14px; font-size: 0.88rem; font-weight: 600;">
         High Model Confidence: Screening prediction set contains single risk tier.
        </div>`;
 
@@ -408,7 +511,7 @@ function renderAssessmentResult(data, sample, expData) {
 
   if (btnPrintReport) btnPrintReport.style.display = "inline-block";
 
-  // Render Local Feature Attribution Table
+  // Render Local Feature Attribution Table with Horizontal Growing Bars (occlusion-based, approximate)
   if (attributionCard && expData && expData.feature_attributions) {
     const tbody = document.getElementById("attribution-tbody");
     if (tbody) {
@@ -419,15 +522,23 @@ function renderAssessmentResult(data, sample, expData) {
         Lead: 0.0058, Mercury: 0.00037, Arsenic: 0.0056
       };
 
+      const maxAttr = Math.max(...Object.values(expData.feature_attributions).map(v => Math.abs(v)), 0.001);
+
       for (const [feat, val] of Object.entries(expData.feature_attributions)) {
         const sign = val >= 0 ? "+" : "";
-        const color = val > 0 ? "#991b1b" : "#166534";
+        const color = val > 0 ? "var(--status-polluted)" : "var(--status-good)";
         const sampleVal = sample[feat] !== undefined ? sample[feat] : "-";
         const medVal = baselineMedians[feat] !== undefined ? baselineMedians[feat] : "-";
+        const barWidthPct = Math.min(100, Math.round((Math.abs(val) / maxAttr) * 100));
 
         rowsHtml += `
           <tr>
-            <td><strong>${escapeHtml(feat)}</strong></td>
+            <td>
+              <strong>${escapeHtml(feat)}</strong>
+              <div class="attribution-bar-track">
+                <div class="attribution-bar-fill" style="width: 0%; background-color: ${color};" data-target-width="${barWidthPct}%"></div>
+              </div>
+            </td>
             <td>${sampleVal}</td>
             <td>${medVal}</td>
             <td style="color: ${color}; font-weight: 700;">${sign}${val.toFixed(4)}</td>
@@ -436,6 +547,13 @@ function renderAssessmentResult(data, sample, expData) {
       }
       tbody.innerHTML = rowsHtml;
       attributionCard.style.display = "block";
+
+      // Animate bar growth once horizontally with 300ms transition
+      setTimeout(() => {
+        tbody.querySelectorAll(".attribution-bar-fill").forEach(bar => {
+          bar.style.width = bar.dataset.targetWidth;
+        });
+      }, 50);
     }
   }
 
@@ -466,12 +584,26 @@ function renderAssessmentResult(data, sample, expData) {
   }
 }
 
-// 4. Batch CSV Processing
+// 5. Batch CSV Processing with Drag-and-Drop, File Checks, Formula Injection Sanitization & Table Sorting
 let currentBatchData = null;
+let currentSortColumn = "row_index";
+let currentSortAsc = true;
+
+// CSV Formula Injection Sanitizer: prepends single quote if cell starts with =, +, -, or @
+function sanitizeCsvCell(val) {
+  if (val === null || val === undefined) return '""';
+  let str = String(val).replace(/"/g, '""');
+  if (str.length > 0 && ["=", "+", "-", "@"].includes(str.charAt(0))) {
+    str = "'" + str;
+  }
+  return `"${str}"`;
+}
 
 function setupBatchUploadForm() {
   const form = document.getElementById("batch-upload-form");
   const fileInput = document.getElementById("batch-file-input");
+  const dropzone = document.getElementById("batch-dropzone");
+  const dropzoneText = document.getElementById("dropzone-text");
   const btnDemoBatch = document.getElementById("btn-load-sample-batch");
   const errorBox = document.getElementById("batch-upload-error");
   const btnDownloadCsv = document.getElementById("btn-download-batch-csv");
@@ -480,6 +612,45 @@ function setupBatchUploadForm() {
   const tierSelect = document.getElementById("batch-tier-select");
 
   if (!form) return;
+
+  // Drag and Drop Zone Listeners
+  if (dropzone && fileInput) {
+    dropzone.addEventListener("click", () => fileInput.click());
+    dropzone.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        fileInput.click();
+      }
+    });
+
+    ["dragenter", "dragover"].forEach((eventName) => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzone.classList.add("dragover");
+      });
+    });
+
+    ["dragleave", "drop"].forEach((eventName) => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("dragover");
+      });
+    });
+
+    dropzone.addEventListener("drop", async (e) => {
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        const file = e.dataTransfer.files[0];
+        if (dropzoneText) dropzoneText.textContent = `Selected: ${file.name}`;
+        await processBatchFile(file);
+      }
+    });
+
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files && fileInput.files.length > 0 && dropzoneText) {
+        dropzoneText.textContent = `Selected: ${fileInput.files[0].name}`;
+      }
+    });
+  }
 
   // Demo Batch CSV Loader
   if (btnDemoBatch) {
@@ -499,6 +670,7 @@ function setupBatchUploadForm() {
 
       const blob = new Blob([demoCsv], { type: "text/csv" });
       const file = new File([blob], "demo_batch.csv", { type: "text/csv" });
+      if (dropzoneText) dropzoneText.textContent = "Selected: demo_batch.csv (10 Samples)";
       await processBatchFile(file);
     });
   }
@@ -507,7 +679,7 @@ function setupBatchUploadForm() {
     e.preventDefault();
     if (!fileInput.files || fileInput.files.length === 0) {
       if (errorBox) {
-        errorBox.textContent = "Please select a valid CSV file to upload.";
+        errorBox.textContent = "Please select or drop a valid CSV file to upload.";
         errorBox.style.display = "block";
       }
       return;
@@ -518,9 +690,11 @@ function setupBatchUploadForm() {
 
   async function processBatchFile(file) {
     if (errorBox) errorBox.style.display = "none";
-    if (file.size > 2 * 1024 * 1024) {
+    
+    // Client-side file size check (5 MB limit)
+    if (file.size > 5 * 1024 * 1024) {
       if (errorBox) {
-        errorBox.textContent = "File size exceeds 2 MB maximum allowable limit.";
+        errorBox.textContent = "File size exceeds 5 MB maximum allowable limit.";
         errorBox.style.display = "block";
       }
       return;
@@ -555,7 +729,7 @@ function setupBatchUploadForm() {
         errorBox.style.display = "block";
       }
       if (resultContainer) {
-        resultContainer.innerHTML = `<p style="color: #991b1b; text-align: center; padding: 30px;">Failed to evaluate batch: ${escapeHtml(err.message)}</p>`;
+        resultContainer.innerHTML = `<p style="color: var(--status-polluted); text-align: center; padding: 30px;">Failed to evaluate batch: ${escapeHtml(err.message)}</p>`;
       }
     }
   }
@@ -583,7 +757,7 @@ function setupBatchUploadForm() {
     tierSelect.addEventListener("change", handleFilter);
   }
 
-  // Export Results CSV
+  // Export Results CSV with Formula Injection Sanitization
   if (btnDownloadCsv) {
     btnDownloadCsv.addEventListener("click", () => {
       if (!currentBatchData || !currentBatchData.results) return;
@@ -591,11 +765,11 @@ function setupBatchUploadForm() {
 
       currentBatchData.results.forEach((r) => {
         if (!r.error) {
-          const cSet = `"${r.conformal_set.join(";")}"`;
+          const cSet = sanitizeCsvCell(r.conformal_set.join(";"));
           const pGood = r.probabilities ? r.probabilities.Good : "";
           const pMod = r.probabilities ? r.probabilities.Moderate : "";
           const pPoll = r.probabilities ? r.probabilities.Polluted : "";
-          csvContent += `${r.row_index},"${r.sample_id || ""}",${r.predicted_class},${r.confidence},${pGood},${pMod},${pPoll},${cSet},${r.needs_laboratory_test ? "YES" : "NO"}\n`;
+          csvContent += `${r.row_index},${sanitizeCsvCell(r.sample_id || "")},${sanitizeCsvCell(r.predicted_class)},${r.confidence},${pGood},${pMod},${pPoll},${cSet},${r.needs_laboratory_test ? "YES" : "NO"}\n`;
         }
       });
 
@@ -668,7 +842,7 @@ function renderBatchTableRows(rows) {
         <tr>
           <td>${r.row_index}</td>
           <td>${escapeHtml(r.sample_id || "-")}</td>
-          <td colspan="5" style="color: #991b1b; font-weight: 600;">${escapeHtml(r.error)}</td>
+          <td colspan="5" style="color: var(--status-polluted); font-weight: 600;">${escapeHtml(r.error)}</td>
         </tr>
       `;
     } else {
@@ -680,8 +854,8 @@ function renderBatchTableRows(rows) {
           : '<span class="badge badge-polluted">Polluted</span>';
 
       const labFlag = r.needs_laboratory_test
-        ? '<span style="color: #991b1b; font-weight: 700;">Needs Lab Test</span>'
-        : '<span style="color: #166534; font-weight: 600;">Pass</span>';
+        ? '<span style="color: var(--status-polluted); font-weight: 700;">Needs Lab Test</span>'
+        : '<span style="color: var(--status-good); font-weight: 600;">Pass</span>';
 
       tbodyHtml += `
         <tr>
@@ -698,15 +872,15 @@ function renderBatchTableRows(rows) {
 
   container.innerHTML = `
     <div class="table-wrapper">
-      <table>
+      <table id="batch-results-table">
         <thead>
           <tr>
-            <th>Row</th>
-            <th>Sample Identifier</th>
-            <th>Screening Tier</th>
-            <th>Model Confidence</th>
+            <th class="sortable ${currentSortColumn === 'row_index' ? (currentSortAsc ? 'sorted-asc' : 'sorted-desc') : ''}" data-col="row_index">Row</th>
+            <th class="sortable ${currentSortColumn === 'sample_id' ? (currentSortAsc ? 'sorted-asc' : 'sorted-desc') : ''}" data-col="sample_id">Sample Identifier</th>
+            <th class="sortable ${currentSortColumn === 'predicted_class' ? (currentSortAsc ? 'sorted-asc' : 'sorted-desc') : ''}" data-col="predicted_class">Screening Tier</th>
+            <th class="sortable ${currentSortColumn === 'confidence' ? (currentSortAsc ? 'sorted-asc' : 'sorted-desc') : ''}" data-col="confidence">Model Confidence</th>
             <th>Conformal Set C(x)</th>
-            <th>Laboratory Triage</th>
+            <th class="sortable ${currentSortColumn === 'needs_laboratory_test' ? (currentSortAsc ? 'sorted-asc' : 'sorted-desc') : ''}" data-col="needs_laboratory_test">Laboratory Triage</th>
           </tr>
         </thead>
         <tbody>
@@ -715,14 +889,159 @@ function renderBatchTableRows(rows) {
       </table>
     </div>
   `;
+
+  // Attach sort listeners to table headers
+  const ths = container.querySelectorAll("th.sortable");
+  ths.forEach(th => {
+    th.addEventListener("click", () => {
+      const col = th.dataset.col;
+      if (currentSortColumn === col) {
+        currentSortAsc = !currentSortAsc;
+      } else {
+        currentSortColumn = col;
+        currentSortAsc = true;
+      }
+
+      rows.sort((a, b) => {
+        let valA = a[col];
+        let valB = b[col];
+        if (typeof valA === "string") valA = valA.toLowerCase();
+        if (typeof valB === "string") valB = valB.toLowerCase();
+        if (valA < valB) return currentSortAsc ? -1 : 1;
+        if (valA > valB) return currentSortAsc ? 1 : -1;
+        return 0;
+      });
+
+      renderBatchTableRows(rows);
+    });
+  });
 }
 
-// 5. Geographic Map Setup (Leaflet)
+// 6. Accessible Lightbox Modal for Diagnostic Figures
+function setupFigureLightbox() {
+  const modal = document.getElementById("lightbox-modal");
+  if (!modal) return;
+  const modalImg = document.getElementById("lightbox-img");
+  const modalTitle = document.getElementById("lightbox-title");
+  const modalCaption = document.getElementById("lightbox-caption");
+  const closeBtn = document.getElementById("lightbox-close-btn");
+  let lastFocusedElement = null;
+
+  function openLightbox(imgSrc, title, caption, triggerElem) {
+    lastFocusedElement = triggerElem;
+    modalImg.src = imgSrc;
+    modalImg.alt = title;
+    modalTitle.textContent = title;
+    modalCaption.textContent = caption;
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    if (closeBtn) closeBtn.focus();
+  }
+
+  function closeLightbox() {
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    if (lastFocusedElement) lastFocusedElement.focus();
+  }
+
+  document.querySelectorAll(".figure-container").forEach((fig) => {
+    const img = fig.querySelector(".figure-img");
+    const title = fig.querySelector("h4") ? fig.querySelector("h4").textContent : "Diagnostic Figure";
+    const caption = fig.querySelector(".figure-caption") ? fig.querySelector(".figure-caption").textContent : "";
+    if (img) {
+      fig.style.cursor = "pointer";
+      fig.setAttribute("tabindex", "0");
+      fig.setAttribute("role", "button");
+      fig.setAttribute("aria-label", `View full resolution: ${title}`);
+      const handler = () => openLightbox(img.src, title, caption, fig);
+      fig.addEventListener("click", handler);
+      fig.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handler();
+        }
+      });
+    }
+  });
+
+  if (closeBtn) closeBtn.addEventListener("click", closeLightbox);
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) closeLightbox();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal.classList.contains("open")) {
+      closeLightbox();
+    }
+  });
+}
+
+// 7. Accessible Accordions
+function setupAccordions() {
+  const headers = document.querySelectorAll(".accordion-header");
+  headers.forEach((header) => {
+    header.addEventListener("click", () => {
+      const isExpanded = header.getAttribute("aria-expanded") === "true";
+      const targetId = header.getAttribute("aria-controls");
+      const body = document.getElementById(targetId);
+      if (!body) return;
+
+      if (isExpanded) {
+        header.setAttribute("aria-expanded", "false");
+        body.hidden = true;
+      } else {
+        header.setAttribute("aria-expanded", "true");
+        body.hidden = false;
+      }
+    });
+  });
+}
+
+// 8. Results Page Tabbed Interface
+function setupResultsTabs() {
+  const tabBtns = document.querySelectorAll(".tab-btn");
+  if (tabBtns.length === 0) return;
+
+  tabBtns.forEach((btn, idx) => {
+    btn.addEventListener("click", () => {
+      const targetPanelId = btn.getAttribute("aria-controls");
+      tabBtns.forEach(b => {
+        b.classList.remove("active");
+        b.setAttribute("aria-selected", "false");
+      });
+      document.querySelectorAll(".tab-panel").forEach(panel => {
+        panel.classList.remove("active");
+        panel.hidden = true;
+      });
+
+      btn.classList.add("active");
+      btn.setAttribute("aria-selected", "true");
+      const targetPanel = document.getElementById(targetPanelId);
+      if (targetPanel) {
+        targetPanel.classList.add("active");
+        targetPanel.hidden = false;
+      }
+    });
+
+    btn.addEventListener("keydown", (e) => {
+      let nextIdx = null;
+      if (e.key === "ArrowRight") nextIdx = (idx + 1) % tabBtns.length;
+      else if (e.key === "ArrowLeft") nextIdx = (idx - 1 + tabBtns.length) % tabBtns.length;
+      if (nextIdx !== null) {
+        e.preventDefault();
+        tabBtns[nextIdx].focus();
+        tabBtns[nextIdx].click();
+      }
+    });
+  });
+}
+
+// 9. Geographic Map Setup (Leaflet)
 function setupGeographicMap() {
   const mapElement = document.getElementById("monitoring-map");
   if (!mapElement) return;
 
-  // Realistic simulated river basin stations across Bhubaneswar, Odisha
   const stations = [
     { id: "STN-BBS-01", name: "Kuakhai River Barrage (North Intake)", lat: 20.3540, lng: 85.8650, tier: "Good", ph: 7.3, turb: 2.2, do: 6.9, bod: 1.6, lead: 0.004 },
     { id: "STN-BBS-02", name: "Daya River Confluence (South Catchment)", lat: 20.2180, lng: 85.8520, tier: "Moderate", ph: 6.5, turb: 6.8, do: 4.8, bod: 3.9, lead: 0.012 },
@@ -766,7 +1085,6 @@ function setupGeographicMap() {
     `;
   }
 
-  // Check if Leaflet is loaded
   if (typeof L !== "undefined") {
     try {
       const map = L.map("monitoring-map").setView([20.2961, 85.8245], 12);
@@ -814,7 +1132,6 @@ function setupGeographicMap() {
         });
       }
 
-      // Custom coordinate form
       const coordForm = document.getElementById("custom-coord-form");
       if (coordForm) {
         coordForm.addEventListener("submit", (e) => {
@@ -885,7 +1202,7 @@ function renderFallbackMapSvg(container, stations, onSelect) {
   window.__selectStation = onSelect;
 }
 
-// 6. Session History (localStorage)
+// 10. Session History (localStorage)
 function saveToSessionHistory(pred, sample) {
   const history = JSON.parse(localStorage.getItem("aquasense_history") || "[]");
   const meta = pred.sample_metadata || {};
@@ -901,7 +1218,6 @@ function saveToSessionHistory(pred, sample) {
     sample: sample,
   });
 
-  // Keep last 25 records
   if (history.length > 25) history.pop();
   localStorage.setItem("aquasense_history", JSON.stringify(history));
   loadSessionHistory();
@@ -918,7 +1234,7 @@ function loadSessionHistory() {
   }
 
   let rowsHtml = "";
-  history.forEach((h, idx) => {
+  history.forEach((h) => {
     const tierBadge =
       h.tier === "Good"
         ? '<span class="badge badge-good">Good</span>'
@@ -927,8 +1243,8 @@ function loadSessionHistory() {
         : '<span class="badge badge-polluted">Polluted</span>';
 
     const labStatus = h.needsLab
-      ? '<span style="color: #991b1b; font-weight: 700;">Needs Lab Test</span>'
-      : '<span style="color: #166534; font-weight: 600;">Pass</span>';
+      ? '<span style="color: var(--status-polluted); font-weight: 700;">Needs Lab Test</span>'
+      : '<span style="color: var(--status-good); font-weight: 600;">Pass</span>';
 
     const dateStr = new Date(h.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -966,7 +1282,6 @@ function loadSessionHistory() {
     </div>
   `;
 
-  // History button listeners
   const btnClear = document.getElementById("btn-clear-history");
   if (btnClear) {
     btnClear.onclick = () => {
@@ -985,7 +1300,9 @@ function loadSessionHistory() {
       const a = document.createElement("a");
       a.href = url;
       a.download = `aquasense_history_${Date.now()}.json`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     };
   }
@@ -995,14 +1312,16 @@ function loadSessionHistory() {
     btnExportCsv.onclick = () => {
       let csv = "Timestamp,Sample_ID,Location,Risk_Tier,Confidence,Conformal_Set,Needs_Lab_Test\n";
       history.forEach(h => {
-        csv += `"${h.timestamp}","${h.sampleId}","${h.location}",${h.tier},${h.confidence},"[${h.conformal.join(';')}]",${h.needsLab ? 'YES' : 'NO'}\n`;
+        csv += `${sanitizeCsvCell(h.timestamp)},${sanitizeCsvCell(h.sampleId)},${sanitizeCsvCell(h.location)},${sanitizeCsvCell(h.tier)},${h.confidence},${sanitizeCsvCell(h.conformal.join(';'))},${h.needsLab ? 'YES' : 'NO'}\n`;
       });
       const blob = new Blob([csv], { type: "text/csv" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `aquasense_history_${Date.now()}.csv`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     };
   }

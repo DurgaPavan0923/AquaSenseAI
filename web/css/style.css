@@ -38,6 +38,40 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
+[data-theme="dark"] {
+  --bg-primary: #0b1120;
+  --bg-surface: #111827;
+  --bg-subtle: #1e293b;
+  --bg-highlight: #172554;
+  --border-color: #334155;
+  --border-subtle: #1e293b;
+  --border-focus: #38bdf8;
+
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-light: #64748b;
+  --text-inverse: #0b1120;
+
+  --accent: #38bdf8;
+  --accent-hover: #0284c7;
+  --accent-subtle: #082f49;
+  --teal-accent: #2dd4bf;
+  --teal-subtle: #134e4a;
+
+  --status-good: #4ade80;
+  --status-good-bg: #052e16;
+  --status-good-border: #166534;
+  --status-mod: #fb923c;
+  --status-mod-bg: #431407;
+  --status-mod-border: #9a3412;
+  --status-polluted: #f87171;
+  --status-polluted-bg: #450a0a;
+  --status-polluted-border: #991b1b;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -1093,3 +1127,238 @@ tr:hover td {
     width: 100%;
   }
 }
+
+/* Reduced Motion Compliance */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 6px 10px;
+  cursor: pointer;
+  color: var(--text-main);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+}
+.theme-toggle-btn:hover {
+  background-color: var(--bg-subtle);
+  border-color: var(--accent);
+}
+
+/* Drag and Drop Zone */
+.dropzone {
+  border: 2px dashed var(--border-color);
+  border-radius: 4px;
+  background-color: var(--bg-surface);
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+  margin-bottom: 16px;
+}
+.dropzone:hover,
+.dropzone:focus-visible {
+  border-color: var(--accent);
+  background-color: var(--bg-subtle);
+}
+.dropzone.dragover {
+  border-color: var(--accent);
+  background-color: var(--accent-subtle);
+}
+
+/* Accessible Lightbox Modal */
+.lightbox-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background-color: rgba(15, 23, 42, 0.85);
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.lightbox-modal.open {
+  display: flex;
+}
+.lightbox-dialog {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  max-width: 920px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 20px;
+  position: relative;
+  box-shadow: var(--shadow-md);
+}
+.lightbox-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.lightbox-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+.lightbox-close-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 5px 12px;
+  cursor: pointer;
+  color: var(--text-main);
+  font-weight: 600;
+  font-size: 0.88rem;
+  transition: background-color 0.18s ease;
+}
+.lightbox-close-btn:hover {
+  background-color: var(--bg-subtle);
+}
+.lightbox-img {
+  max-width: 100%;
+  max-height: 60vh;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 14px auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+}
+.lightbox-caption {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* Accessible Accordions */
+.accordion-group {
+  margin-bottom: 24px;
+}
+.accordion-item {
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  margin-bottom: 12px;
+  background-color: var(--bg-surface);
+  overflow: hidden;
+}
+.accordion-header {
+  width: 100%;
+  text-align: left;
+  padding: 14px 18px;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text-main);
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.18s ease;
+}
+.accordion-header:hover {
+  background-color: var(--bg-subtle);
+}
+.accordion-header[aria-expanded="true"] {
+  background-color: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.accordion-icon {
+  font-size: 1.1rem;
+  font-weight: bold;
+  transition: transform 0.18s ease;
+  line-height: 1;
+}
+.accordion-header[aria-expanded="true"] .accordion-icon {
+  transform: rotate(45deg);
+}
+.accordion-body {
+  padding: 18px;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+.accordion-body[hidden] {
+  display: none;
+}
+
+/* Form Validation */
+.form-input.is-invalid {
+  border-color: #dc2626 !important;
+  background-color: #fef2f2;
+}
+[data-theme="dark"] .form-input.is-invalid {
+  background-color: #450a0a;
+}
+.form-input.is-valid {
+  border-color: #16a34a !important;
+}
+.field-error {
+  display: none;
+  color: #dc2626;
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-top: 4px;
+}
+.field-error.visible {
+  display: block;
+}
+
+/* Feature Attribution Occlusion Bar */
+.attribution-bar-track {
+  width: 100%;
+  height: 8px;
+  background-color: var(--border-subtle);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.attribution-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease-out;
+}
+
+/* Sortable Table Columns */
+th.sortable {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  padding-right: 22px;
+}
+th.sortable:hover {
+  background-color: var(--bg-subtle);
+}
+th.sortable::after {
+  content: " \2195";
+  position: absolute;
+  right: 6px;
+  color: var(--text-light);
+  font-size: 0.8rem;
+}
+th.sorted-asc::after {
+  content: " \2191";
+  color: var(--accent);
+}
+th.sorted-desc::after {
+  content: " \2193";
+  color: var(--accent);
+}
+
