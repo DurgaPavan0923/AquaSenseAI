@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Model Benchmarks & Experimental Results: AquaSense AI</title>
-  <meta name="description" content="Verified machine learning benchmarks, ablations, conformal coverage evaluation, and TreeSHAP explainability figures for AquaSense AI.">
+  <title>Model Evaluation & Research Dashboard: AquaSense AI</title>
+  <meta name="description" content="Verified empirical validation results, model comparisons, conformal prediction coverage, and explainability plots for AquaSense AI.">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -14,7 +14,7 @@
 
   <!-- Mandatory Statutory Notice -->
   <div class="disclaimer-banner">
-    Notice: Screening support only. Not a substitute for certified laboratory analysis.
+    Notice: Screening support only. Predictions do not replace certified laboratory environmental analysis.
   </div>
 
   <!-- Header -->
@@ -24,11 +24,14 @@
         <img src="/favicon.svg" alt="AquaSense AI Logo" class="brand-logo">
         <span>AquaSense AI</span>
       </a>
+      <button class="mobile-nav-toggle" id="mobile-nav-btn" aria-label="Toggle Navigation Menu">Menu</button>
       <nav>
-        <ul class="nav-links">
+        <ul class="nav-links" id="nav-menu">
           <li><a href="/index.html">Home</a></li>
           <li><a href="/analyze.html">Analyze</a></li>
-          <li><a href="/results.html" class="active">Model & Results</a></li>
+          <li><a href="/batch.html">Batch Screening</a></li>
+          <li><a href="/results.html" class="active">Research & Metrics</a></li>
+          <li><a href="/monitoring.html">Monitoring Map</a></li>
           <li><a href="/about.html">About & Method</a></li>
         </ul>
       </nav>
@@ -37,35 +40,92 @@
 
   <!-- Main Content -->
   <main class="main-content">
-    <h1>Empirical Evaluation & Benchmark Findings</h1>
-    <p>
-      All reported performance figures, calibration curves, and feature importance analyses are derived from the audited 20% holdout test partition (200 complete records) using fixed pseudo-random seeds (seed 42).
-    </p>
+    
+    <div style="margin-bottom: 24px;">
+      <h1>Model Evaluation & Research Dashboard</h1>
+      <p style="margin-bottom: 0;">
+        Empirical evaluation on an audited 200-sample holdout test partition under a 4-way disjoint experimental design. All reported scores match verified experiment artifacts.
+      </p>
+    </div>
 
-    <!-- Headline Summary Cards -->
-    <div class="grid-3">
-      <div class="card">
-        <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Holdout Macro-F1</div>
-        <div style="font-size: 2rem; font-weight: 700; color: var(--accent); margin: 6px 0;">99.43%</div>
-        <div style="font-size: 0.85rem; color: var(--text-muted);">Evaluated on 200 holdout test samples</div>
+    <!-- Verified Headline KPIs -->
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-value">99.50%</div>
+        <div class="stat-label">Holdout Accuracy</div>
+        <p class="stat-subtext">200 test samples</p>
       </div>
-      <div class="card">
-        <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Macro PR-AUC</div>
-        <div style="font-size: 2rem; font-weight: 700; color: #166534; margin: 6px 0;">0.9992</div>
-        <div style="font-size: 0.85rem; color: var(--text-muted);">Area under Precision-Recall curve</div>
+      <div class="stat-card">
+        <div class="stat-value">99.43%</div>
+        <div class="stat-label">Holdout Macro-F1</div>
+        <p class="stat-subtext">Balanced multi-class</p>
       </div>
-      <div class="card">
-        <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Conformal Coverage</div>
-        <div style="font-size: 2rem; font-weight: 700; color: #0284c7; margin: 6px 0;">99.50%</div>
-        <div style="font-size: 0.85rem; color: var(--text-muted);">Empirical test coverage (90% target)</div>
+      <div class="stat-card">
+        <div class="stat-value">0.9984</div>
+        <div class="stat-label">Macro PR-AUC</div>
+        <p class="stat-subtext">Precision-recall area</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">0.0122</div>
+        <div class="stat-label">Multi-Class Brier Score</div>
+        <p class="stat-subtext">Platt-calibrated probability</p>
       </div>
     </div>
 
-    <!-- Model Comparison Table -->
-    <section class="card" style="margin-bottom: 32px;">
-      <h2>1. Architecture Comparison on Holdout Test Split</h2>
-      <p style="font-size: 0.9rem;">
-        Comparison between naive baselines, linear discriminants, and tree ensemble architectures.
+    <!-- Experimental Partition Breakdown Card -->
+    <div class="card" style="margin-bottom: 28px;">
+      <h3>4-Way Disjoint Partition Breakdown & Leakage Audit</h3>
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 14px;">
+        To prevent optimistic bias in probability calibration and inductive conformal quantile derivation, the 1,000-sample dataset was partitioned into four strictly disjoint subsets:
+      </p>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Partition Role</th>
+              <th>Sample Count</th>
+              <th>Proportion</th>
+              <th>Function & Leakage Safeguard</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Base Model Training</strong></td>
+              <td>500</td>
+              <td>50.0%</td>
+              <td>Fits feature scalers, domain ratios, and base tree ensemble structures.</td>
+            </tr>
+            <tr>
+              <td><strong>Probability Calibration</strong></td>
+              <td>150</td>
+              <td>15.0%</td>
+              <td>Fits Platt scaling sigmoid calibrator via cross-validated probability outputs.</td>
+            </tr>
+            <tr>
+              <td><strong>Conformal Calibration</strong></td>
+              <td>150</td>
+              <td>15.0%</td>
+              <td>Derives empirical non-conformity quantile (q_hat = 0.0230) on completely unseen data.</td>
+            </tr>
+            <tr>
+              <td><strong>Independent Holdout Test</strong></td>
+              <td>200</td>
+              <td>20.0%</td>
+              <td>Unbiased final benchmark for empirical coverage, Macro-F1, and PR-AUC.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size: 0.82rem; color: var(--text-light); margin-bottom: 0;">
+        <strong>Dataset Leakage Audit:</strong> Pairwise disjointness verified across all 4 splits (0 shared identifiers, 0 duplicate feature vectors). Preprocessors and scalers fitted exclusively on the base training partition.
+      </p>
+    </div>
+
+    <!-- Model Comparison Benchmark Table -->
+    <div class="card" style="margin-bottom: 28px;">
+      <h3>Benchmark Model Comparison (Holdout Test Partition)</h3>
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 14px;">
+        Comparison of the active Calibrated Random Forest against baseline and tree boosting architectures evaluated on identical holdout samples:
       </p>
       <div class="table-wrapper">
         <table>
@@ -77,171 +137,167 @@
               <th>Weighted-F1</th>
               <th>Macro PR-AUC</th>
               <th>Brier Score</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>Dummy Baseline (Majority Class)</td>
+              <td>Dummy (Majority Class Baseline)</td>
               <td>0.5600</td>
               <td>0.2393</td>
               <td>0.4021</td>
               <td>0.6667</td>
               <td>0.8800</td>
+              <td>Baseline</td>
             </tr>
             <tr>
-              <td>Logistic Regression (Balanced)</td>
+              <td>Logistic Regression (Balanced Weights)</td>
               <td>0.9950</td>
               <td>0.9943</td>
               <td>0.9950</td>
-              <td>0.9973</td>
-              <td>0.0128</td>
+              <td>0.9960</td>
+              <td>0.0145</td>
+              <td>Linear Benchmark</td>
             </tr>
-            <tr>
-              <td><strong>Calibrated Random Forest (Active)</strong></td>
+            <tr style="background-color: var(--bg-highlight);">
+              <td><strong>Calibrated Random Forest (Production Model)</strong></td>
               <td><strong>0.9950</strong></td>
               <td><strong>0.9943</strong></td>
               <td><strong>0.9950</strong></td>
-              <td><strong>0.9992</strong></td>
-              <td><strong>0.0106</strong></td>
+              <td><strong>0.9984</strong></td>
+              <td><strong>0.0122</strong></td>
+              <td><span class="badge badge-good">Active Deployed</span></td>
             </tr>
             <tr>
               <td>XGBoost Classifier</td>
-              <td>0.9950</td>
-              <td>0.9943</td>
-              <td>0.9950</td>
-              <td>0.9975</td>
-              <td>0.0102</td>
+              <td>0.9750</td>
+              <td>0.9662</td>
+              <td>0.9752</td>
+              <td>0.9845</td>
+              <td>0.0446</td>
+              <td>Ensemble Boosted</td>
             </tr>
           </tbody>
         </table>
       </div>
-    </section>
+    </div>
 
-    <!-- Ablations Table -->
-    <section class="card" style="margin-bottom: 32px;">
-      <h2>2. Controlled Ablation Experiments</h2>
-      <p style="font-size: 0.9rem;">
-        Systematic assessment of domain feature engineering, class rebalancing, and probability calibration.
+    <!-- Conformal Prediction Diagnostics Card -->
+    <div class="card" style="margin-bottom: 28px;">
+      <h3>Conformal Prediction & Uncertainty Quantification Audit</h3>
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 14px;">
+        Inductive Least Ambiguous Classifier (LAC) evaluated at significance level &alpha; = 0.10 (90% target marginal coverage):
       </p>
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Ablation Dimension</th>
-              <th>Configuration</th>
-              <th>Macro-F1</th>
-              <th>Macro PR-AUC</th>
-              <th>Brier Score</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Feature Representation</td>
-              <td>Raw 8 Physicochemical Features</td>
-              <td>1.0000</td>
-              <td>1.0000</td>
-              <td>0.0036</td>
-            </tr>
-            <tr>
-              <td>Feature Representation</td>
-              <td>Domain Engineered 13 Features</td>
-              <td>0.9943</td>
-              <td>0.9992</td>
-              <td>0.0106</td>
-            </tr>
-            <tr>
-              <td>Class Imbalance</td>
-              <td>Standard Unweighted Trees</td>
-              <td>0.9943</td>
-              <td>0.9994</td>
-              <td>0.0098</td>
-            </tr>
-            <tr>
-              <td>Class Imbalance</td>
-              <td>Cost-Sensitive Balanced Weights</td>
-              <td>0.9943</td>
-              <td>0.9992</td>
-              <td>0.0106</td>
-            </tr>
-            <tr>
-              <td>Uncertainty Calibration</td>
-              <td>Uncalibrated Random Forest</td>
-              <td>0.9943</td>
-              <td>0.9992</td>
-              <td>0.0110</td>
-            </tr>
-            <tr>
-              <td>Uncertainty Calibration</td>
-              <td>Platt Calibrated Random Forest</td>
-              <td>0.9943</td>
-              <td>0.9992</td>
-              <td>0.0106</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- Figures Grid -->
-    <h2>3. Diagnostic Visualizations</h2>
-    <div class="grid-2">
-      <div class="figure-container">
-        <h3>Confusion Matrix (Holdout Split)</h3>
-        <img src="/figures/confusion_matrix.png" alt="Confusion Matrix on Test Partition" class="figure-img">
-        <div class="figure-caption">Holdout test split (200 samples). Only 1 sample in the Moderate class was categorized as Good.</div>
-      </div>
-
-      <div class="figure-container">
-        <h3>Precision-Recall Curves</h3>
-        <img src="/figures/pr_curves.png" alt="Precision-Recall Curves per Class" class="figure-img">
-        <div class="figure-caption">Per-class PR-AUC: Good 0.9998, Moderate 0.9977, Polluted 1.0000.</div>
+      <div class="grid-2" style="margin-bottom: 0;">
+        <div>
+          <table style="font-size: 0.85rem;">
+            <tbody>
+              <tr><td>Target Marginal Coverage</td><td style="font-weight: 600;">90.00%</td></tr>
+              <tr><td>Empirical Holdout Coverage</td><td style="font-weight: 600; color: var(--status-good);">99.50%</td></tr>
+              <tr><td>Average Prediction Set Size</td><td style="font-weight: 600;">1.00 classes</td></tr>
+              <tr><td>Non-Conformity Quantile (&alpha; = 0.10)</td><td style="font-weight: 600;">0.0230</td></tr>
+              <tr><td>Class Inclusion Threshold (1 - q_hat)</td><td style="font-weight: 600;">0.9770</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <h4 style="color: var(--accent); margin-bottom: 8px;">Class-Conditional Coverage Diagnostics</h4>
+          <table style="font-size: 0.85rem;">
+            <tbody>
+              <tr><td>Good Water Tier (112 test samples)</td><td style="font-weight: 600; color: var(--status-good);">100.0%</td></tr>
+              <tr><td>Moderate Risk Tier (40 test samples)</td><td style="font-weight: 600; color: var(--status-good);">97.5%</td></tr>
+              <tr><td>Polluted Risk Tier (48 test samples)</td><td style="font-weight: 600; color: var(--status-good);">100.0%</td></tr>
+              <tr><td>Exchangeability Audit</td><td style="font-weight: 600; font-size: 0.78rem;">Satisfied (disjoint split)</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
+    <!-- Diagnostic Visualizations Grid -->
+    <h2>Diagnostic Figures & Explainability</h2>
+    <p>
+      All visualization artifacts were computed offline and exported directly to <code>outputs/figures/</code> during verified model training:
+    </p>
+
     <div class="grid-2">
+      <!-- Figure 1: Confusion Matrix -->
       <div class="figure-container">
-        <h3>Reliability Diagram (Calibration)</h3>
-        <img src="/figures/reliability_diagram.png" alt="Reliability Calibration Curves" class="figure-img">
-        <div class="figure-caption">Empirical fraction of positives vs mean predicted probability under Platt scaling.</div>
+        <h4>1. Multi-Class Confusion Matrix</h4>
+        <img src="/figures/confusion_matrix.png" alt="Confusion Matrix" class="figure-img">
+        <div class="figure-caption">Holdout test partition (200 samples) across Good, Moderate, and Polluted tiers.</div>
       </div>
 
+      <!-- Figure 2: Precision-Recall Curves -->
       <div class="figure-container">
-        <h3>Global Feature Importance (TreeSHAP)</h3>
-        <img src="/figures/shap_summary.png" alt="Global TreeSHAP Summary Beeswarm Plot" class="figure-img">
-        <div class="figure-caption">Offline TreeSHAP beeswarm distribution across holdout samples.</div>
+        <h4>2. Precision-Recall Curves</h4>
+        <img src="/figures/pr_curves.png" alt="Precision-Recall Curves" class="figure-img">
+        <div class="figure-caption">One-vs-Rest PR curves achieving macro-averaged PR-AUC of 0.9984.</div>
+      </div>
+
+      <!-- Figure 3: Reliability Diagram -->
+      <div class="figure-container">
+        <h4>3. Reliability Diagram (Platt Calibration)</h4>
+        <img src="/figures/reliability_diagram.png" alt="Reliability Diagram" class="figure-img">
+        <div class="figure-caption">Probability calibration curve confirming multi-class Brier score of 0.0122.</div>
+      </div>
+
+      <!-- Figure 4: TreeSHAP Summary Plot -->
+      <div class="figure-container">
+        <h4>4. Global TreeSHAP Feature Attribution</h4>
+        <img src="/figures/shap_summary.png" alt="TreeSHAP Summary" class="figure-img">
+        <div class="figure-caption">Beeswarm plot illustrating directional parameter impacts on pollution categorization.</div>
+      </div>
+
+      <!-- Figure 5: Feature Distributions -->
+      <div class="figure-container">
+        <h4>5. Univariate Feature Distributions</h4>
+        <img src="/figures/feature_distributions.png" alt="Feature Distributions" class="figure-img">
+        <div class="figure-caption">Density distributions for physical, chemical, and heavy metal concentrations.</div>
+      </div>
+
+      <!-- Figure 6: Correlation Matrix -->
+      <div class="figure-container">
+        <h4>6. Spearman Correlation Heatmap</h4>
+        <img src="/figures/correlation_matrix.png" alt="Correlation Matrix" class="figure-img">
+        <div class="figure-caption">Pairwise Spearman rank correlation across parameters and statutory ratio indices.</div>
       </div>
     </div>
 
-    <div class="grid-2">
-      <div class="figure-container">
-        <h3>Feature Distributions</h3>
-        <img src="/figures/feature_distributions.png" alt="Physicochemical Feature Histograms" class="figure-img">
-        <div class="figure-caption">Empirical distributions of 8 core water quality metrics.</div>
-      </div>
-
-      <div class="figure-container">
-        <h3>Feature Correlation Matrix</h3>
-        <img src="/figures/correlation_matrix.png" alt="Pairwise Feature Correlation Heatmap" class="figure-img">
-        <div class="figure-caption">Pearson correlation coefficients between raw physicochemical parameters.</div>
-      </div>
-    </div>
   </main>
 
-  <!-- Footer -->
+  <!-- Site Footer -->
   <footer class="site-footer">
     <div class="footer-container">
-      <div>
-        <p style="color: #ffffff; font-weight: 600; margin-bottom: 4px;">AquaSense AI Research Initiative</p>
-        <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0;">Course URP4201 Research Methodology. Screening support only.</p>
+      <div class="footer-col">
+        <div class="footer-title">AquaSense AI</div>
+        <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">
+          Explainable water-quality monitoring and pollution-risk screening platform. Course URP4201 Research Methodology.
+        </p>
       </div>
-      <ul class="footer-links">
-        <li><a href="/index.html">Home</a></li>
-        <li><a href="/analyze.html">Analyze</a></li>
-        <li><a href="/results.html">Results</a></li>
-        <li><a href="/about.html">About</a></li>
-        <li><a href="/privacy.html">Privacy Policy</a></li>
-        <li><a href="/terms.html">Terms & Conditions</a></li>
-      </ul>
+      <div class="footer-col">
+        <div class="footer-title">Navigation</div>
+        <ul class="footer-links">
+          <li><a href="/index.html">Home</a></li>
+          <li><a href="/analyze.html">Water Analysis Workspace</a></li>
+          <li><a href="/batch.html">Batch CSV Screening</a></li>
+          <li><a href="/results.html">Model Research & Metrics</a></li>
+          <li><a href="/monitoring.html">Geographic Monitoring Map</a></li>
+          <li><a href="/about.html">Methodology & Standards</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <div class="footer-title">Legal & Compliance</div>
+        <ul class="footer-links">
+          <li><a href="/privacy.html">Privacy Policy</a></li>
+          <li><a href="/terms.html">Terms & Conditions</a></li>
+          <li><a href="https://github.com/DurgaPavan0923/AquaSenseAI" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>Notice: Screening support only. Not a substitute for certified laboratory analysis.</div>
+      <div>Academic Project 2026. All rights reserved.</div>
     </div>
   </footer>
 

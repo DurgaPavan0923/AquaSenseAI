@@ -19,14 +19,57 @@ PHYSICAL_BOUNDS: dict[str, dict[str, float]] = {
     "Arsenic": {"min": 0.0, "max": 5.0},
 }
 
-STATUTORY_LIMITS: dict[str, dict[str, float]] = {
-    "pH": {"min": 6.5, "max": 8.5},
-    "Turbidity": {"max": 5.0},
-    "Dissolved Oxygen": {"min": 6.5},
-    "Biochemical Oxygen Demand": {"max": 2.0},
-    "Lead": {"max": 0.01},
-    "Mercury": {"max": 0.001},
-    "Arsenic": {"max": 0.01},
+STATUTORY_LIMITS: dict[str, dict[str, Any]] = {
+    "pH": {
+        "min": 6.5,
+        "max": 8.5,
+        "unit": "pH",
+        "category": "Drinking & Surface Water",
+        "authority": "WHO 4th Ed. / BIS IS 10500:2012 / US EPA Secondary Standard",
+        "rationale": "pH < 6.5 accelerates pipe corrosion and heavy metal leaching; pH > 8.5 causes scaling, bitter taste, and reduced chlorination efficacy.",
+    },
+    "Turbidity": {
+        "max": 5.0,
+        "unit": "NTU",
+        "category": "Drinking Water",
+        "authority": "WHO Guidelines / BIS IS 10500:2012 Permissible Limit",
+        "rationale": "High turbidity shields biological pathogens from disinfection and indicates particulate or colloidal suspension.",
+    },
+    "Dissolved Oxygen": {
+        "min": 6.5,
+        "unit": "mg/L",
+        "category": "Surface Water & Aquatic Health",
+        "authority": "CPCB Class A Surface Water / US EPA Freshwater Aquatic Life Criteria",
+        "rationale": "DO below 6.5 mg/L indicates organic decomposition, hypoxia, and respiratory stress for aquatic organisms.",
+    },
+    "Biochemical Oxygen Demand": {
+        "max": 2.0,
+        "unit": "mg/L",
+        "category": "Surface Water & Organic Load",
+        "authority": "CPCB Class A Raw Water Source / European Environment Agency Benchmark",
+        "rationale": "5-day BOD > 2.0 mg/L signifies untreated organic pollution, sewage discharge, or agricultural runoff.",
+    },
+    "Lead": {
+        "max": 0.01,
+        "unit": "mg/L",
+        "category": "Drinking Water Toxicant",
+        "authority": "WHO Guideline Value (0.01 mg/L) / BIS IS 10500:2012 / US EPA Action Level (0.015 mg/L)",
+        "rationale": "Cumulative neurotoxicant causing cognitive impairment in children, hypertension, and nephrotoxicity.",
+    },
+    "Mercury": {
+        "max": 0.001,
+        "unit": "mg/L",
+        "category": "Drinking Water Toxicant",
+        "authority": "BIS IS 10500:2012 (0.001 mg/L) / WHO Guideline (0.006 mg/L inorganic) / US EPA MCL (0.002 mg/L)",
+        "rationale": "Potent neurotoxin and renal toxicant with bioaccumulative methylmercury pathways in aquatic food chains.",
+    },
+    "Arsenic": {
+        "max": 0.01,
+        "unit": "mg/L",
+        "category": "Drinking Water Toxicant",
+        "authority": "WHO Provisional Guideline (0.01 mg/L) / BIS IS 10500:2012 / US EPA MCL (0.010 mg/L)",
+        "rationale": "Group 1 human carcinogen causing vascular disease, skin lesions, and internal cancers upon chronic ingestion.",
+    },
 }
 
 FEATURE_ORDER: list[str] = [
@@ -39,6 +82,49 @@ FEATURE_ORDER: list[str] = [
     "Mercury",
     "Arsenic",
 ]
+
+
+def audit_parameter_observations(sample_dict: dict[str, float]) -> list[dict[str, Any]]:
+    """
+    Generates granular scientific observations for each parameter with verified statutory citations.
+    """
+    observations: list[dict[str, Any]] = []
+    for feat in FEATURE_ORDER:
+        val = float(sample_dict.get(feat, 0.0))
+        spec = STATUTORY_LIMITS.get(feat)
+        if not spec:
+            # Temperature
+            observations.append({
+                "parameter": feat,
+                "value": round(val, 2),
+                "unit": "deg C",
+                "status": "Ambient",
+                "authority": "Operational / Physical Characteristic",
+                "observation": f"Measured temperature of {val:.1f} deg C within normal ambient hydrological range.",
+            })
+            continue
+
+        unit = spec["unit"]
+        status = "Compliant"
+        note = f"Within standard benchmark criteria ({spec['authority']})."
+
+        if "min" in spec and val < spec["min"]:
+            status = "Deficient" if "Oxygen" in feat else "Below Permissible Limit"
+            note = f"Measured {val:.4f} {unit} is below statutory minimum {spec['min']} {unit}. {spec['rationale']}"
+        elif "max" in spec and val > spec["max"]:
+            status = "Exceeded"
+            note = f"Measured {val:.4f} {unit} exceeds statutory limit of {spec['max']} {unit}. {spec['rationale']}"
+
+        observations.append({
+            "parameter": feat,
+            "value": round(val, 5),
+            "unit": unit,
+            "status": status,
+            "category": spec["category"],
+            "authority": spec["authority"],
+            "observation": note,
+        })
+    return observations
 
 
 class AnomalyDetector:
@@ -117,4 +203,5 @@ class AnomalyDetector:
             "anomaly_score": round(anomaly_score, 4),
             "physical_violations": physical_violations,
             "statutory_violations": statutory_violations,
+            "parameter_observations": audit_parameter_observations(sample_dict),
         }

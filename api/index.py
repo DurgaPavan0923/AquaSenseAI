@@ -5,7 +5,9 @@ Uses NumPy, Scikit-Learn, Joblib, Pydantic, and FastAPI without heavy dependenci
 """
 
 import csv
+import datetime
 import io
+import json
 import sys
 from pathlib import Path
 from typing import Any
@@ -21,12 +23,13 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.aquasense.anomaly import AnomalyDetector
+from src.aquasense.anomaly import AnomalyDetector, audit_parameter_observations
 from src.aquasense.uncertainty import assess_prediction_confidence
 
 # Load Model Bundle
 MODEL_BUNDLE_PATH = PROJECT_ROOT / "models" / "model_bundle.joblib"
 REGISTRY_PATH = PROJECT_ROOT / "models" / "registry.json"
+METRICS_PATH = PROJECT_ROOT / "results" / "metrics.json"
 
 bundle: dict[str, Any] | None = None
 if MODEL_BUNDLE_PATH.exists():
@@ -65,6 +68,9 @@ CLASS_LABELS = {0: "Good", 1: "Moderate", 2: "Polluted"}
 
 
 class WaterSampleInput(BaseModel):
+    sample_id: str | None = Field(default=None, description="Sample identifier")
+    location: str | None = Field(default=None, description="Sampling station or GPS coordinates")
+    collection_time: str | None = Field(default=None, description="Sample collection timestamp")
     pH: float = Field(..., ge=0.0, le=14.0, description="Acidity/alkalinity level")
     Turbidity: float = Field(..., ge=0.0, le=500.0, description="Turbidity in NTU")
     Temperature: float = Field(..., ge=-5.0, le=60.0, description="Water temperature in deg C")
@@ -80,6 +86,9 @@ class WaterSampleInput(BaseModel):
         "populate_by_name": True,
         "json_schema_extra": {
             "example": {
+                "sample_id": "STN-DEL-001",
+                "location": "Upper Yamuna Basin, Station 3",
+                "collection_time": "2026-11-24T09:00:00Z",
                 "pH": 7.2,
                 "Turbidity": 2.5,
                 "Temperature": 22.0,
@@ -119,7 +128,7 @@ class WaterSampleInput(BaseModel):
 
 def sanitize_csv_cell(value: str) -> str:
     """Sanitizes CSV cell to prevent CSV formula injection."""
-    stripped = value.strip()
+    stripped = str(value).strip()
     if stripped and stripped[0] in ("=", "+", "-", "@", "\t", "\r"):
         return "'" + stripped
     return stripped
@@ -144,33 +153,41 @@ def get_model_metadata() -> dict[str, Any]:
     if not bundle:
         raise HTTPException(status_code=503, detail="Model bundle not loaded.")
 
-    import json
     registry_data = {}
     if REGISTRY_PATH.exists():
         with open(REGISTRY_PATH, encoding="utf-8") as f:
             registry_data = json.load(f)
 
+    metrics_data = {}
+    if METRICS_PATH.exists():
+        with open(METRICS_PATH, encoding="utf-8") as f:
+            metrics_data = json.load(f)
+
     return {
-        "model_name": "Calibrated Random Forest with Domain Feature Engineering",
+        "model_name": "Calibrated Random Forest with Domain Feature Engineering (4-Way Disjoint Partition)",
         "version": bundle.get("version", "1.0.0"),
         "features": FEATURE_ORDER,
         "classes": CLASS_LABELS,
-        "conformal_quantile_90": round(float(bundle.get("conformal_quantile", 0.0216)), 6),
+        "conformal_quantile_90": round(float(bundle.get("conformal_quantile", 0.0230)), 6),
         "registry": registry_data,
+        "verified_metrics": metrics_data.get("headline_metrics", {}),
+        "partition_breakdown": metrics_data.get("partition_breakdown", {}),
+        "dataset_leakage_audit": metrics_data.get("dataset_leakage_audit", {}),
+        "conformal_uncertainty": metrics_data.get("conformal_uncertainty", {}),
     }
 
 
 @app.post("/predict")
 def predict_water_quality(sample: WaterSampleInput) -> dict[str, Any]:
     """
-    Performs calibrated multi-class screening with Inductive Conformal Prediction set
-    and confidence assessment.
+    Performs calibrated multi-class screening with Inductive Conformal Prediction set,
+    granulated parameter observations, and statutory laboratory recommendations.
     """
     if not bundle:
         raise HTTPException(status_code=503, detail="Model bundle not loaded.")
 
     clf = bundle["model"]
-    quantile = float(bundle.get("conformal_quantile", 0.0216))
+    quantile = float(bundle.get("conformal_quantile", 0.0230))
 
     x = sample.to_array().reshape(1, -1)
     probs = clf.predict_proba(x)[0]
@@ -185,7 +202,40 @@ def predict_water_quality(sample: WaterSampleInput) -> dict[str, Any]:
     # Confidence audit
     needs_lab_test, confidence_msg = assess_prediction_confidence(probs, prediction_set)
 
+    # Sensor & statutory bounds audit
+    detector = AnomalyDetector()
+    anomaly_audit = detector.audit_sample(sample.to_dict())
+
+    # Formulate laboratory recommendation
+    if needs_lab_test or anomaly_audit["severity"] == "CRITICAL":
+        lab_recommendation = (
+            "Immediate certified environmental laboratory testing required (ICP-MS heavy metal panel, 5-day standard "
+            "BOD assay, and membrane filtration microbial screening). Prediction confidence is ambiguous or sensor bounds breached."
+        )
+    elif pred_class == 2:
+        lab_recommendation = (
+            "High pollution risk detected. Immediate contamination tracing and accredited laboratory confirmation "
+            "recommended prior to any municipal, agricultural, or potable consumption."
+        )
+    elif pred_class == 1:
+        lab_recommendation = (
+            "Moderate risk profile. Secondary verification advised prior to sensitive use."
+        )
+    else:
+        lab_recommendation = (
+            "Nominal low-risk screening profile. Routine scheduled laboratory verification recommended."
+        )
+
+    now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    sample_id = sample.sample_id or f"AQ-{int(datetime.datetime.now(datetime.timezone.utc).timestamp())}"
+
     return {
+        "sample_metadata": {
+            "sample_id": sample_id,
+            "location": sample.location or "Monitored Station",
+            "collection_time": sample.collection_time or now_iso,
+            "analysis_timestamp": now_iso,
+        },
         "predicted_class": pred_class,
         "risk_tier": CLASS_LABELS.get(pred_class, "Unknown"),
         "probabilities": {
@@ -194,10 +244,15 @@ def predict_water_quality(sample: WaterSampleInput) -> dict[str, Any]:
             "Polluted": round(float(probs[2]), 4),
         },
         "conformal_prediction_set": [CLASS_LABELS.get(c, str(c)) for c in prediction_set],
-        "conformal_coverage_guarantee": "90% Marginal Coverage",
+        "conformal_coverage_guarantee": "90% Marginal Coverage (Finite-Sample LAC)",
+        "conformal_inclusion_threshold": round(threshold, 4),
         "needs_laboratory_test": needs_lab_test,
         "confidence_assessment": confidence_msg,
-        "disclaimer": "Screening support only. Not a substitute for certified laboratory analysis.",
+        "laboratory_recommendation": lab_recommendation,
+        "anomaly_audit": anomaly_audit,
+        "parameter_observations": anomaly_audit.get("parameter_observations", []),
+        "model_version": bundle.get("version", "1.0.0"),
+        "disclaimer": "Screening support only. Predictions do not replace certified laboratory environmental analysis.",
     }
 
 
@@ -286,40 +341,84 @@ async def predict_batch_csv(file: UploadFile = File(...)) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
     max_rows = 500
     clf = bundle["model"]
-    quantile = float(bundle.get("conformal_quantile", 0.0216))
+    quantile = float(bundle.get("conformal_quantile", 0.0230))
     threshold = max(0.0, 1.0 - quantile)
+
+    risk_counts = {"Good": 0, "Moderate": 0, "Polluted": 0}
+    needs_lab_count = 0
+    anomalous_count = 0
+
+    detector = AnomalyDetector()
+
+    # Look for optional sample identifier column
+    sample_id_col = None
+    for field in reader.fieldnames:
+        if field.strip().lower() in ("sample_id", "sampleid", "id", "sample"):
+            sample_id_col = field
+            break
 
     for i, row in enumerate(reader):
         if i >= max_rows:
             break
         try:
             sample_vals = [float(row[field_map[f]]) for f in FEATURE_ORDER]
+            sample_dict = {f: float(row[field_map[f]]) for f in FEATURE_ORDER}
             x_arr = np.array(sample_vals, dtype=float).reshape(1, -1)
             probs = clf.predict_proba(x_arr)[0]
             pred_class = int(np.argmax(probs))
+            tier_name = CLASS_LABELS.get(pred_class, "Unknown")
+            risk_counts[tier_name] = risk_counts.get(tier_name, 0) + 1
 
             c_set = [int(c) for c, p in enumerate(probs) if p >= threshold]
             if not c_set:
                 c_set = [pred_class]
 
-            needs_lab, _ = assess_prediction_confidence(probs, c_set)
+            needs_lab, conf_msg = assess_prediction_confidence(probs, c_set)
+            if needs_lab:
+                needs_lab_count += 1
+
+            # Quick statutory limit check
+            audit = detector.audit_sample(sample_dict)
+            if audit["is_anomaly"]:
+                anomalous_count += 1
+
+            sid = sanitize_csv_cell(row[sample_id_col]) if sample_id_col and row.get(sample_id_col) else f"ROW-{i+1}"
 
             rows.append({
                 "row_index": i + 1,
-                "predicted_class": CLASS_LABELS.get(pred_class, str(pred_class)),
+                "sample_id": sid,
+                "predicted_class": tier_name,
                 "confidence": round(float(probs[pred_class]), 4),
+                "probabilities": {
+                    "Good": round(float(probs[0]), 4),
+                    "Moderate": round(float(probs[1]), 4),
+                    "Polluted": round(float(probs[2]), 4),
+                },
                 "conformal_set": [CLASS_LABELS.get(c, str(c)) for c in c_set],
                 "needs_laboratory_test": needs_lab,
+                "confidence_message": conf_msg,
+                "anomaly_severity": audit["severity"],
+                "is_anomaly": audit["is_anomaly"],
             })
-        except ValueError as exc:
+        except (ValueError, KeyError) as exc:
             rows.append({
                 "row_index": i + 1,
+                "sample_id": f"ROW-{i+1}",
                 "error": f"Invalid numerical values: {exc}",
             })
 
     return {
+        "batch_id": f"BATCH-{int(datetime.datetime.now(datetime.timezone.utc).timestamp())}",
         "total_processed": len(rows),
         "limit_applied": max_rows,
+        "batch_summary": {
+            "risk_distribution": risk_counts,
+            "polluted_samples_count": risk_counts.get("Polluted", 0),
+            "moderate_samples_count": risk_counts.get("Moderate", 0),
+            "good_samples_count": risk_counts.get("Good", 0),
+            "needs_laboratory_test_count": needs_lab_count,
+            "anomalous_samples_count": anomalous_count,
+        },
         "results": rows,
-        "disclaimer": "Screening support only. Not a substitute for certified laboratory analysis.",
+        "disclaimer": "Screening support only. Predictions do not replace certified laboratory environmental analysis.",
     }

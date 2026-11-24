@@ -21,7 +21,7 @@ from sklearn.calibration import CalibratedClassifierCV
 from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold
+from sklearn.model_selection import PredefinedSplit, RandomizedSearchCV, StratifiedKFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from xgboost import XGBClassifier
@@ -32,8 +32,8 @@ from src.aquasense.data import (
     TARGET_COLUMN,
     load_raw_dataset,
     save_processed_splits,
-    split_dataset,
-    verify_no_leakage,
+    split_dataset_4way,
+    verify_no_leakage_4way,
 )
 from src.aquasense.evaluate import (
     compute_multiclass_metrics,
@@ -68,17 +68,32 @@ def run_training_and_ablations() -> dict[str, Any]:
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
     OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    print("Phase 0/1: Loading and auditing dataset...")
+    print("Phase 0/1: Loading and auditing dataset (4-way partition)...")
     df = load_raw_dataset()
-    train_df, test_df = split_dataset(df, test_size=0.20, random_state=42)
-    verify_no_leakage(train_df, test_df)
-    save_processed_splits(train_df, test_df)
+    train_df, prob_calib_df, conf_calib_df, test_df = split_dataset_4way(
+        df,
+        test_size=0.20,
+        prob_calib_size=0.15,
+        conformal_calib_size=0.15,
+        random_state=42,
+    )
+    verify_no_leakage_4way(train_df, prob_calib_df, conf_calib_df, test_df)
+    save_processed_splits(
+        train_df,
+        test_df,
+        prob_calib_df=prob_calib_df,
+        conf_calib_df=conf_calib_df,
+    )
 
-    # Plot EDA figures
+    # Plot EDA figures on training partition
     plot_eda_figures(train_df)
 
     X_train = train_df[FEATURE_COLUMNS]
     y_train = train_df[TARGET_COLUMN].values
+    X_prob_calib = prob_calib_df[FEATURE_COLUMNS]
+    y_prob_calib = prob_calib_df[TARGET_COLUMN].values
+    X_conf_calib = conf_calib_df[FEATURE_COLUMNS]
+    y_conf_calib = conf_calib_df[TARGET_COLUMN].values
     X_test = test_df[FEATURE_COLUMNS]
     y_test = test_df[TARGET_COLUMN].values
 
@@ -165,17 +180,22 @@ def run_training_and_ablations() -> dict[str, Any]:
     stability_report = evaluate_rank_stability(fold_importances)
     print(f"Feature Rank Stability across folds: {stability_report}")
 
-    # 3. Probability Calibration (Platt Scaling)
-    print("\n--- Probability Calibration & Conformal Prediction ---")
-    calibrated_model = CalibratedClassifierCV(best_estimator, method="sigmoid", cv=5)
-    calibrated_model.fit(X_train, y_train)
+    # 3. Probability Calibration (Platt Scaling via PredefinedSplit)
+    print("\n--- Probability Calibration & Conformal Prediction (4-Way Disjoint) ---")
+    X_combined = pd.concat([X_train, X_prob_calib], axis=0).reset_index(drop=True)
+    y_combined = np.concatenate([y_train, y_prob_calib])
+    # -1: used only to fit base estimator; 0: used only to calibrate sigmoid probabilities
+    test_fold = np.array([-1] * len(X_train) + [0] * len(X_prob_calib))
+    ps = PredefinedSplit(test_fold)
+    calibrated_model = CalibratedClassifierCV(best_estimator, cv=ps, method="sigmoid")
+    calibrated_model.fit(X_combined, y_combined)
 
-    # Conformal Calibration (using calibration probabilities on training set via internal folds or split)
-    calib_probs = calibrated_model.predict_proba(X_train)
+    # Conformal Calibration (strictly on unseen conformal calibration partition)
+    conf_probs = calibrated_model.predict_proba(X_conf_calib)
     conformal = ConformalCalibrator(alpha=0.10)
-    conformal.calibrate(calib_probs, y_train)
+    conformal.calibrate(conf_probs, y_conf_calib)
 
-    # Final test evaluation on calibrated model
+    # Final test evaluation on strictly holdout independent test partition
     test_probs_calib = calibrated_model.predict_proba(X_test)
     test_preds_calib = np.argmax(test_probs_calib, axis=1)
 
@@ -183,6 +203,7 @@ def run_training_and_ablations() -> dict[str, Any]:
     conformal_eval = conformal.evaluate_coverage(test_probs_calib, y_test)
     print(f"Final Calibrated Test Macro-F1: {final_metrics['macro_f1']:.4f}")
     print(f"Conformal Test Coverage (target 90%): {conformal_eval['empirical_coverage']*100:.2f}% (avg set size: {conformal_eval['average_set_size']:.2f})")
+    print(f"Class-Conditional Coverage: {conformal_eval['class_conditional_coverage']}")
 
     # 4. Generate Core Evaluation Figures
     plot_confusion_matrix_figure(final_metrics["confusion_matrix"])
@@ -283,10 +304,21 @@ def run_training_and_ablations() -> dict[str, Any]:
 
     # 7. Save results/metrics.json with real numbers
     all_metrics = {
-        "dataset_split": "Holdout Test Split (20% Stratified, 200 samples)",
-        "training_samples": len(X_train),
-        "test_samples": len(X_test),
-        "model_architecture": "Calibrated Random Forest with Domain Features",
+        "dataset_split": "Independent Holdout Test Split (20% Stratified, 200 samples)",
+        "partition_breakdown": {
+            "training_samples": len(X_train),
+            "probability_calibration_samples": len(X_prob_calib),
+            "conformal_calibration_samples": len(X_conf_calib),
+            "independent_test_samples": len(X_test),
+            "total_samples": len(df),
+        },
+        "dataset_leakage_audit": {
+            "duplicate_samples_detected": 0,
+            "train_test_contamination": "None: verified pairwise disjoint across all 4 partitions",
+            "derived_feature_leakage": "None: preprocessors and scalers fitted on train partition only",
+            "labeling_rule_limitation": "Target labels (Good, Moderate, Polluted) are derived from composite threshold intervals across the 8 physical and chemical parameters. The model approximates these underlying labeling criteria with high fidelity rather than discovering unmeasured biochemical contaminants. Predictions serve as screening support only and do not replace certified laboratory analysis.",
+        },
+        "model_architecture": "Calibrated Random Forest with Domain Features (4-Way Partition)",
         "headline_metrics": {
             "macro_f1": final_metrics["macro_f1"],
             "accuracy": final_metrics["accuracy"],

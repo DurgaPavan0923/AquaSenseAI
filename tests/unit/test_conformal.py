@@ -27,6 +27,11 @@ def test_conformal_calibration_and_coverage():
     eval_res = calibrator.evaluate_coverage(probs_calib, y_calib)
     assert eval_res["empirical_coverage"] >= 0.88
     assert eval_res["average_set_size"] >= 1.0
+    assert "class_conditional_coverage" in eval_res
+    assert "ambiguous_predictions_count" in eval_res
+    assert "singleton_predictions_count" in eval_res
+    assert "exchangeability_audit" in eval_res
+    assert eval_res["total_test_samples"] == 100
 
 
 def test_conformal_prediction_set_generation():

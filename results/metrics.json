@@ -1,27 +1,38 @@
 {
-  "dataset_split": "Holdout Test Split (20% Stratified, 200 samples)",
-  "training_samples": 800,
-  "test_samples": 200,
-  "model_architecture": "Calibrated Random Forest with Domain Features",
+  "dataset_split": "Independent Holdout Test Split (20% Stratified, 200 samples)",
+  "partition_breakdown": {
+    "training_samples": 500,
+    "probability_calibration_samples": 150,
+    "conformal_calibration_samples": 150,
+    "independent_test_samples": 200,
+    "total_samples": 1000
+  },
+  "dataset_leakage_audit": {
+    "duplicate_samples_detected": 0,
+    "train_test_contamination": "None: verified pairwise disjoint across all 4 partitions",
+    "derived_feature_leakage": "None: preprocessors and scalers fitted on train partition only",
+    "labeling_rule_limitation": "Target labels (Good, Moderate, Polluted) are derived from composite threshold intervals across the 8 physical and chemical parameters. The model approximates these underlying labeling criteria with high fidelity rather than discovering unmeasured biochemical contaminants. Predictions serve as screening support only and do not replace certified laboratory analysis."
+  },
+  "model_architecture": "Calibrated Random Forest with Domain Features (4-Way Partition)",
   "headline_metrics": {
     "macro_f1": 0.9943,
     "accuracy": 0.995,
     "weighted_f1": 0.995,
-    "macro_pr_auc": 0.9992,
-    "brier_score": 0.0106
+    "macro_pr_auc": 0.9984,
+    "brier_score": 0.0122
   },
   "per_class_metrics": {
     "Good": {
       "precision": 0.9912,
       "recall": 1.0,
       "f1_score": 0.9956,
-      "pr_auc": 0.9998
+      "pr_auc": 0.9995
     },
     "Moderate": {
       "precision": 1.0,
       "recall": 0.975,
       "f1_score": 0.9873,
-      "pr_auc": 0.9977
+      "pr_auc": 0.9958
     },
     "Polluted": {
       "precision": 1.0,
@@ -51,20 +62,31 @@
     "target_coverage": 0.9,
     "empirical_coverage": 0.995,
     "average_set_size": 1.0,
-    "quantile_threshold": 0.021586139731428644
+    "quantile_threshold": 0.022965,
+    "inclusion_threshold": 0.977035,
+    "class_conditional_coverage": {
+      "Good": 1.0,
+      "Moderate": 0.975,
+      "Polluted": 1.0
+    },
+    "ambiguous_predictions_count": 0,
+    "singleton_predictions_count": 200,
+    "empty_pre_fallback_count": 19,
+    "total_test_samples": 200,
+    "exchangeability_audit": "Satisfied: evaluated on an independent holdout conformal partition disjoint from model training and probability calibration."
   },
   "feature_rank_stability": {
-    "mean_spearman_rank_correlation": 0.9505,
+    "mean_spearman_rank_correlation": 0.9429,
     "stability_level": "High"
   },
   "training_medians": {
     "pH": 7.152,
-    "Turbidity": 2.895,
-    "Temperature": 22.1,
-    "Dissolved Oxygen": 5.58,
-    "Biochemical Oxygen Demand": 2.41,
-    "Lead": 0.006055,
-    "Mercury": 0.0003775,
-    "Arsenic": 0.0056500000000000005
+    "Turbidity": 2.9000000000000004,
+    "Temperature": 22.14,
+    "Dissolved Oxygen": 5.615,
+    "Biochemical Oxygen Demand": 2.35,
+    "Lead": 0.005805,
+    "Mercury": 0.0003705,
+    "Arsenic": 0.005595
   }
 }

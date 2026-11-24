@@ -1,5 +1,5 @@
 model_name,accuracy,macro_f1,weighted_f1,macro_pr_auc,brier_score
 Dummy (Majority),0.56,0.2393,0.4021,0.6667,0.88
-Logistic Regression,0.995,0.9943,0.995,0.9973,0.0128
-Random Forest,0.995,0.9943,0.995,0.9989,0.0111
-XGBoost,0.995,0.9943,0.995,0.9975,0.0102
+Logistic Regression,0.995,0.9943,0.995,0.996,0.0145
+Random Forest,0.995,0.9943,0.995,0.9984,0.0137
+XGBoost,0.975,0.9662,0.9752,0.9845,0.0446
