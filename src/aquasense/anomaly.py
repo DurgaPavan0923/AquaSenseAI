@@ -94,14 +94,16 @@ def audit_parameter_observations(sample_dict: dict[str, float]) -> list[dict[str
         spec = STATUTORY_LIMITS.get(feat)
         if not spec:
             # Temperature
-            observations.append({
-                "parameter": feat,
-                "value": round(val, 2),
-                "unit": "deg C",
-                "status": "Ambient",
-                "authority": "Operational / Physical Characteristic",
-                "observation": f"Measured temperature of {val:.1f} deg C within normal ambient hydrological range.",
-            })
+            observations.append(
+                {
+                    "parameter": feat,
+                    "value": round(val, 2),
+                    "unit": "deg C",
+                    "status": "Ambient",
+                    "authority": "Operational / Physical Characteristic",
+                    "observation": f"Measured temperature of {val:.1f} deg C within normal ambient hydrological range.",
+                }
+            )
             continue
 
         unit = spec["unit"]
@@ -115,15 +117,17 @@ def audit_parameter_observations(sample_dict: dict[str, float]) -> list[dict[str
             status = "Exceeded"
             note = f"Measured {val:.4f} {unit} exceeds statutory limit of {spec['max']} {unit}. {spec['rationale']}"
 
-        observations.append({
-            "parameter": feat,
-            "value": round(val, 5),
-            "unit": unit,
-            "status": status,
-            "category": spec["category"],
-            "authority": spec["authority"],
-            "observation": note,
-        })
+        observations.append(
+            {
+                "parameter": feat,
+                "value": round(val, 5),
+                "unit": unit,
+                "status": status,
+                "category": spec["category"],
+                "authority": spec["authority"],
+                "observation": note,
+            }
+        )
     return observations
 
 

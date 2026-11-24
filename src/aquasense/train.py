@@ -135,11 +135,13 @@ def run_training_and_ablations() -> dict[str, Any]:
             "brier_score": metrics["brier_score"],
         }
         comparison_records.append(rec)
-        experiment_log.append({
-            "experiment": "model_comparison",
-            "model": name,
-            **rec,
-        })
+        experiment_log.append(
+            {
+                "experiment": "model_comparison",
+                "model": name,
+                **rec,
+            }
+        )
         print(f"{name}: Macro-F1 = {metrics['macro_f1']:.4f}, PR-AUC = {metrics['macro_pr_auc']:.4f}")
 
     comp_df = pd.DataFrame(comparison_records)
@@ -202,7 +204,9 @@ def run_training_and_ablations() -> dict[str, Any]:
     final_metrics = compute_multiclass_metrics(y_test, test_preds_calib, test_probs_calib)
     conformal_eval = conformal.evaluate_coverage(test_probs_calib, y_test)
     print(f"Final Calibrated Test Macro-F1: {final_metrics['macro_f1']:.4f}")
-    print(f"Conformal Test Coverage (target 90%): {conformal_eval['empirical_coverage']*100:.2f}% (avg set size: {conformal_eval['average_set_size']:.2f})")
+    print(
+        f"Conformal Test Coverage (target 90%): {conformal_eval['empirical_coverage'] * 100:.2f}% (avg set size: {conformal_eval['average_set_size']:.2f})"
+    )
     print(f"Class-Conditional Coverage: {conformal_eval['class_conditional_coverage']}")
 
     # 4. Generate Core Evaluation Figures
@@ -230,74 +234,92 @@ def run_training_and_ablations() -> dict[str, Any]:
     ablations_records: list[dict[str, Any]] = []
 
     # Ablation 1: Features (Raw 8 vs Engineered 13)
-    raw_pipe = Pipeline([
-        ("scaler", StandardScaler()),
-        ("classifier", RandomForestClassifier(n_estimators=100, class_weight="balanced", random_state=42)),
-    ])
+    raw_pipe = Pipeline(
+        [
+            ("scaler", StandardScaler()),
+            ("classifier", RandomForestClassifier(n_estimators=100, class_weight="balanced", random_state=42)),
+        ]
+    )
     raw_pipe.fit(X_train, y_train)
     raw_m = compute_multiclass_metrics(y_test, raw_pipe.predict(X_test), raw_pipe.predict_proba(X_test))
-    ablations_records.append({
-        "ablation_group": "Feature Representation",
-        "configuration": "Raw 8 Features",
-        "macro_f1": raw_m["macro_f1"],
-        "macro_pr_auc": raw_m["macro_pr_auc"],
-        "brier_score": raw_m["brier_score"],
-    })
-    ablations_records.append({
-        "ablation_group": "Feature Representation",
-        "configuration": "Domain Engineered 13 Features",
-        "macro_f1": final_metrics["macro_f1"],
-        "macro_pr_auc": final_metrics["macro_pr_auc"],
-        "brier_score": final_metrics["brier_score"],
-    })
+    ablations_records.append(
+        {
+            "ablation_group": "Feature Representation",
+            "configuration": "Raw 8 Features",
+            "macro_f1": raw_m["macro_f1"],
+            "macro_pr_auc": raw_m["macro_pr_auc"],
+            "brier_score": raw_m["brier_score"],
+        }
+    )
+    ablations_records.append(
+        {
+            "ablation_group": "Feature Representation",
+            "configuration": "Domain Engineered 13 Features",
+            "macro_f1": final_metrics["macro_f1"],
+            "macro_pr_auc": final_metrics["macro_pr_auc"],
+            "brier_score": final_metrics["brier_score"],
+        }
+    )
 
     # Ablation 2: Class Imbalance (Unweighted vs Balanced)
-    unweighted_pipe = build_pipeline(RandomForestClassifier(n_estimators=100, random_state=42), use_feature_engineering=True)
+    unweighted_pipe = build_pipeline(
+        RandomForestClassifier(n_estimators=100, random_state=42), use_feature_engineering=True
+    )
     unweighted_pipe.fit(X_train, y_train)
     unw_m = compute_multiclass_metrics(y_test, unweighted_pipe.predict(X_test), unweighted_pipe.predict_proba(X_test))
-    ablations_records.append({
-        "ablation_group": "Class Imbalance Handling",
-        "configuration": "Standard (Unweighted)",
-        "macro_f1": unw_m["macro_f1"],
-        "macro_pr_auc": unw_m["macro_pr_auc"],
-        "brier_score": unw_m["brier_score"],
-    })
-    ablations_records.append({
-        "ablation_group": "Class Imbalance Handling",
-        "configuration": "Cost-Sensitive (Balanced Weights)",
-        "macro_f1": final_metrics["macro_f1"],
-        "macro_pr_auc": final_metrics["macro_pr_auc"],
-        "brier_score": final_metrics["brier_score"],
-    })
+    ablations_records.append(
+        {
+            "ablation_group": "Class Imbalance Handling",
+            "configuration": "Standard (Unweighted)",
+            "macro_f1": unw_m["macro_f1"],
+            "macro_pr_auc": unw_m["macro_pr_auc"],
+            "brier_score": unw_m["brier_score"],
+        }
+    )
+    ablations_records.append(
+        {
+            "ablation_group": "Class Imbalance Handling",
+            "configuration": "Cost-Sensitive (Balanced Weights)",
+            "macro_f1": final_metrics["macro_f1"],
+            "macro_pr_auc": final_metrics["macro_pr_auc"],
+            "brier_score": final_metrics["brier_score"],
+        }
+    )
 
     # Ablation 3: Calibration (Uncalibrated vs Platt Calibrated)
     uncalib_m = compute_multiclass_metrics(y_test, best_estimator.predict(X_test), best_estimator.predict_proba(X_test))
-    ablations_records.append({
-        "ablation_group": "Probability Calibration",
-        "configuration": "Uncalibrated Random Forest",
-        "macro_f1": uncalib_m["macro_f1"],
-        "macro_pr_auc": uncalib_m["macro_pr_auc"],
-        "brier_score": uncalib_m["brier_score"],
-    })
-    ablations_records.append({
-        "ablation_group": "Probability Calibration",
-        "configuration": "Platt Calibrated Random Forest",
-        "macro_f1": final_metrics["macro_f1"],
-        "macro_pr_auc": final_metrics["macro_pr_auc"],
-        "brier_score": final_metrics["brier_score"],
-    })
+    ablations_records.append(
+        {
+            "ablation_group": "Probability Calibration",
+            "configuration": "Uncalibrated Random Forest",
+            "macro_f1": uncalib_m["macro_f1"],
+            "macro_pr_auc": uncalib_m["macro_pr_auc"],
+            "brier_score": uncalib_m["brier_score"],
+        }
+    )
+    ablations_records.append(
+        {
+            "ablation_group": "Probability Calibration",
+            "configuration": "Platt Calibrated Random Forest",
+            "macro_f1": final_metrics["macro_f1"],
+            "macro_pr_auc": final_metrics["macro_pr_auc"],
+            "brier_score": final_metrics["brier_score"],
+        }
+    )
 
     abl_df = pd.DataFrame(ablations_records)
     for rec in ablations_records:
-        experiment_log.append({
-            "experiment": "ablation",
-            "model": rec["configuration"],
-            "accuracy": 0.0,
-            "macro_f1": rec["macro_f1"],
-            "weighted_f1": 0.0,
-            "macro_pr_auc": rec["macro_pr_auc"],
-            "brier_score": rec["brier_score"],
-        })
+        experiment_log.append(
+            {
+                "experiment": "ablation",
+                "model": rec["configuration"],
+                "accuracy": 0.0,
+                "macro_f1": rec["macro_f1"],
+                "weighted_f1": 0.0,
+                "macro_pr_auc": rec["macro_pr_auc"],
+                "brier_score": rec["brier_score"],
+            }
+        )
 
     pd.DataFrame(experiment_log).to_csv(RESULTS_DIR / "experiment_log.csv", index=False)
     export_latex_tables(comp_df, abl_df)

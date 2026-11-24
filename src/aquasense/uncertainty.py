@@ -3,8 +3,9 @@ Uncertainty quantification module for AquaSense AI.
 Provides Platt scaling probability calibration and Inductive Conformal Prediction (LAC).
 """
 
-import numpy as np
 from typing import Any
+
+import numpy as np
 
 
 class ConformalCalibrator:

@@ -111,10 +111,9 @@ class DomainFeatureEngineer(BaseEstimator, TransformerMixin):
         )
 
         # Stack into 2D array: base features (8) + engineered (5) = 13 features
-        output = np.column_stack([
-            ph, turb, temp, do, bod, pb, hg, as_metal,
-            osdr, hmhi, ph_dev, turb_do_ratio, breaches
-        ])
+        output = np.column_stack(
+            [ph, turb, temp, do, bod, pb, hg, as_metal, osdr, hmhi, ph_dev, turb_do_ratio, breaches]
+        )
         return output
 
     def get_feature_names_out(self, input_features: list[str] | None = None) -> np.ndarray:

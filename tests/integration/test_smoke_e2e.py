@@ -24,11 +24,13 @@ def test_full_pipeline_smoke_e2e():
     y_test = test_df[TARGET_COLUMN].values
 
     # 1. Pipeline execution
-    pipe = Pipeline([
-        ("features", DomainFeatureEngineer()),
-        ("scaler", StandardScaler()),
-        ("classifier", RandomForestClassifier(n_estimators=20, random_state=42)),
-    ])
+    pipe = Pipeline(
+        [
+            ("features", DomainFeatureEngineer()),
+            ("scaler", StandardScaler()),
+            ("classifier", RandomForestClassifier(n_estimators=20, random_state=42)),
+        ]
+    )
     pipe.fit(X_train, y_train)
 
     preds = pipe.predict(X_test)

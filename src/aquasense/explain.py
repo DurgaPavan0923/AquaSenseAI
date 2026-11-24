@@ -45,7 +45,9 @@ def explain_sample_occlusion(
     medians = np.asarray(training_medians, dtype=float).flatten()
 
     if len(sample) != len(names) or len(medians) != len(names):
-        raise ValueError(f"Sample length ({len(sample)}) and medians ({len(medians)}) must match features ({len(names)})")
+        raise ValueError(
+            f"Sample length ({len(sample)}) and medians ({len(medians)}) must match features ({len(names)})"
+        )
 
     # Baseline prediction probability
     base_probs = model.predict_proba(sample.reshape(1, -1))[0]
@@ -62,9 +64,7 @@ def explain_sample_occlusion(
         attributions[name] = round(float(delta), 4)
 
     # Sort attributions by absolute impact
-    sorted_attributions = dict(
-        sorted(attributions.items(), key=lambda item: abs(item[1]), reverse=True)
-    )
+    sorted_attributions = dict(sorted(attributions.items(), key=lambda item: abs(item[1]), reverse=True))
 
     return {
         "method": "occlusion-based, approximate",
@@ -88,6 +88,7 @@ def compute_offline_shap_summary(
     """
     import matplotlib
     import shap
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 

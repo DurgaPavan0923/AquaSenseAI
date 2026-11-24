@@ -22,11 +22,7 @@ def test_domain_feature_engineering_math(sample_dataframe):
     # OSDR is at index 8
     assert np.isclose(transformed_arr[0, 8], expected_osdr, atol=1e-4)
 
-    expected_hmhi = (
-        (row0["Lead"] / 0.01)
-        + (row0["Mercury"] / 0.001)
-        + (row0["Arsenic"] / 0.01)
-    )
+    expected_hmhi = (row0["Lead"] / 0.01) + (row0["Mercury"] / 0.001) + (row0["Arsenic"] / 0.01)
     # HMHI is at index 9
     assert np.isclose(transformed_arr[0, 9], expected_hmhi, atol=1e-4)
 
@@ -52,10 +48,12 @@ def test_contaminated_sample_breach_counter(contaminated_feature_dict):
 
 def test_numpy_array_input_support():
     """Verifies transformer handles raw 2D numpy arrays seamlessly (serverless runtime compatibility)."""
-    raw_array = np.array([
-        [7.2, 3.5, 22.0, 7.5, 1.8, 0.002, 0.0001, 0.002],
-        [6.0, 15.0, 26.0, 4.0, 6.0, 0.020, 0.0020, 0.020],
-    ])
+    raw_array = np.array(
+        [
+            [7.2, 3.5, 22.0, 7.5, 1.8, 0.002, 0.0001, 0.002],
+            [6.0, 15.0, 26.0, 4.0, 6.0, 0.020, 0.0020, 0.020],
+        ]
+    )
     transformer = DomainFeatureEngineer()
     out = transformer.fit_transform(raw_array)
     assert isinstance(out, np.ndarray)

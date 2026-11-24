@@ -60,7 +60,9 @@ def check_bundle_size() -> float:
     core_pkg_size = get_dir_size_mb(PROJECT_ROOT / "src" / "aquasense")
 
     app_total = api_size + models_size + core_pkg_size
-    print(f"App Files:  api/ ({api_size:.2f} MB), models/ ({models_size:.2f} MB), src/aquasense/ ({core_pkg_size:.2f} MB)")
+    print(
+        f"App Files:  api/ ({api_size:.2f} MB), models/ ({models_size:.2f} MB), src/aquasense/ ({core_pkg_size:.2f} MB)"
+    )
     print(f"Subtotal Application Files: {app_total:.2f} MB")
 
     # 2. Runtime dependency packages

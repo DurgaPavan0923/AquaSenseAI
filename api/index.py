@@ -23,7 +23,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.aquasense.anomaly import AnomalyDetector, audit_parameter_observations
+from src.aquasense.anomaly import AnomalyDetector
 from src.aquasense.uncertainty import assess_prediction_confidence
 
 # Load Model Bundle
@@ -102,16 +102,19 @@ class WaterSampleInput(BaseModel):
     }
 
     def to_array(self) -> np.ndarray:
-        return np.array([
-            self.pH,
-            self.Turbidity,
-            self.Temperature,
-            self.Dissolved_Oxygen,
-            self.Biochemical_Oxygen_Demand,
-            self.Lead,
-            self.Mercury,
-            self.Arsenic,
-        ], dtype=float)
+        return np.array(
+            [
+                self.pH,
+                self.Turbidity,
+                self.Temperature,
+                self.Dissolved_Oxygen,
+                self.Biochemical_Oxygen_Demand,
+                self.Lead,
+                self.Mercury,
+                self.Arsenic,
+            ],
+            dtype=float,
+        )
 
     def to_dict(self) -> dict[str, float]:
         return {
@@ -218,16 +221,14 @@ def predict_water_quality(sample: WaterSampleInput) -> dict[str, Any]:
             "recommended prior to any municipal, agricultural, or potable consumption."
         )
     elif pred_class == 1:
-        lab_recommendation = (
-            "Moderate risk profile. Secondary verification advised prior to sensitive use."
-        )
+        lab_recommendation = "Moderate risk profile. Secondary verification advised prior to sensitive use."
     else:
         lab_recommendation = (
             "Nominal low-risk screening profile. Routine scheduled laboratory verification recommended."
         )
 
-    now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
-    sample_id = sample.sample_id or f"AQ-{int(datetime.datetime.now(datetime.timezone.utc).timestamp())}"
+    now_iso = datetime.datetime.now(datetime.UTC).isoformat()
+    sample_id = sample.sample_id or f"AQ-{int(datetime.datetime.now(datetime.UTC).timestamp())}"
 
     return {
         "sample_metadata": {
@@ -282,9 +283,7 @@ def explain_prediction(sample: WaterSampleInput) -> dict[str, Any]:
         attributions[feat_name] = round(delta, 4)
 
     # Sort descending by absolute impact
-    sorted_attributions = dict(
-        sorted(attributions.items(), key=lambda item: abs(item[1]), reverse=True)
-    )
+    sorted_attributions = dict(sorted(attributions.items(), key=lambda item: abs(item[1]), reverse=True))
 
     return {
         "method": "occlusion-based, approximate",
@@ -382,33 +381,37 @@ async def predict_batch_csv(file: UploadFile = File(...)) -> dict[str, Any]:
             if audit["is_anomaly"]:
                 anomalous_count += 1
 
-            sid = sanitize_csv_cell(row[sample_id_col]) if sample_id_col and row.get(sample_id_col) else f"ROW-{i+1}"
+            sid = sanitize_csv_cell(row[sample_id_col]) if sample_id_col and row.get(sample_id_col) else f"ROW-{i + 1}"
 
-            rows.append({
-                "row_index": i + 1,
-                "sample_id": sid,
-                "predicted_class": tier_name,
-                "confidence": round(float(probs[pred_class]), 4),
-                "probabilities": {
-                    "Good": round(float(probs[0]), 4),
-                    "Moderate": round(float(probs[1]), 4),
-                    "Polluted": round(float(probs[2]), 4),
-                },
-                "conformal_set": [CLASS_LABELS.get(c, str(c)) for c in c_set],
-                "needs_laboratory_test": needs_lab,
-                "confidence_message": conf_msg,
-                "anomaly_severity": audit["severity"],
-                "is_anomaly": audit["is_anomaly"],
-            })
+            rows.append(
+                {
+                    "row_index": i + 1,
+                    "sample_id": sid,
+                    "predicted_class": tier_name,
+                    "confidence": round(float(probs[pred_class]), 4),
+                    "probabilities": {
+                        "Good": round(float(probs[0]), 4),
+                        "Moderate": round(float(probs[1]), 4),
+                        "Polluted": round(float(probs[2]), 4),
+                    },
+                    "conformal_set": [CLASS_LABELS.get(c, str(c)) for c in c_set],
+                    "needs_laboratory_test": needs_lab,
+                    "confidence_message": conf_msg,
+                    "anomaly_severity": audit["severity"],
+                    "is_anomaly": audit["is_anomaly"],
+                }
+            )
         except (ValueError, KeyError) as exc:
-            rows.append({
-                "row_index": i + 1,
-                "sample_id": f"ROW-{i+1}",
-                "error": f"Invalid numerical values: {exc}",
-            })
+            rows.append(
+                {
+                    "row_index": i + 1,
+                    "sample_id": f"ROW-{i + 1}",
+                    "error": f"Invalid numerical values: {exc}",
+                }
+            )
 
     return {
-        "batch_id": f"BATCH-{int(datetime.datetime.now(datetime.timezone.utc).timestamp())}",
+        "batch_id": f"BATCH-{int(datetime.datetime.now(datetime.UTC).timestamp())}",
         "total_processed": len(rows),
         "limit_applied": max_rows,
         "batch_summary": {

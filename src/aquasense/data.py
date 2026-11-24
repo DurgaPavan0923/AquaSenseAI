@@ -106,7 +106,7 @@ def split_dataset_4way(
     2. Probability calibration partition (Platt scaling, default: 15%, 150 samples)
     3. Conformal calibration partition (non-conformity quantile, default: 15%, 150 samples)
     4. Base model training partition (default: 50%, 500 samples)
-    
+
     Guarantees that conformal calibration observations are never seen during
     base model training or probability calibrator parameter fitting.
     """
@@ -171,7 +171,7 @@ def verify_no_leakage_4way(
                 shared = set(df1["Sample_ID"]).intersection(set(df2["Sample_ID"]))
                 if shared:
                     raise AssertionError(f"Leakage between {names[i]} and {names[j]}: {len(shared)} shared Sample_IDs.")
-            
+
             f1 = df1[FEATURE_COLUMNS].round(6)
             f2 = df2[FEATURE_COLUMNS].round(6)
             merged = pd.merge(f1, f2, how="inner")

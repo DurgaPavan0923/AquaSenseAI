@@ -212,7 +212,9 @@ def plot_eda_figures(df: pd.DataFrame) -> tuple[str, str]:
     for i in range(len(FEATURE_COLUMNS)):
         for j in range(len(FEATURE_COLUMNS)):
             val = corr.iloc[i, j]
-            ax.text(j, i, f"{val:.2f}", ha="center", va="center", color="black" if abs(val) < 0.6 else "white", fontsize=8)
+            ax.text(
+                j, i, f"{val:.2f}", ha="center", va="center", color="black" if abs(val) < 0.6 else "white", fontsize=8
+            )
 
     plt.title("Feature Correlation Matrix", pad=20)
     plt.tight_layout()
