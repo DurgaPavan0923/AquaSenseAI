@@ -4,7 +4,7 @@ Final-year AI/ML Senior Design Project. Predictions are screening support only a
 
 | Academic Details | Information |
 | :--- | :--- |
-| **Course** | URP4201 Research Methodology |
+| **Course** | Research Methodology (URP4201) |
 | **Supervisor** | Dr. Alok Ku. Pani |
 | **Authors** | Ayusman Das (2341004073) |
 | | Selina Mohanty (2341013299) |
