@@ -55,34 +55,13 @@ app.add_middleware(
 )
 
 
-from starlette.responses import JSONResponse
-
-
-@app.exception_handler(404)
-async def custom_404_handler(request: Request, exc):
-    return JSONResponse(
-        status_code=404,
-        content={
-            "error": "404 Not Found",
-            "scope_path": request.scope.get("path"),
-            "scope_root_path": request.scope.get("root_path"),
-            "url_path": str(request.url.path),
-            "headers": dict(request.headers),
-        },
-    )
-
-
 @app.middleware("http")
 async def normalize_vercel_paths(request: Request, call_next):
-    """Normalize Vercel function path prefixes if forwarded."""
-    orig_path = request.scope.get("path", "")
-    request.scope["orig_path"] = orig_path
-    forwarded_path = (
-        request.headers.get("x-matched-path")
-        or request.headers.get("x-forwarded-uri")
-        or request.headers.get("x-invoke-path")
-    )
-    request.scope["forwarded_path"] = forwarded_path
+    """Normalize Vercel function path from query string or forwarded path."""
+    route_param = request.query_params.get("_route")
+    if route_param:
+        clean_route = "/" + route_param.lstrip("/")
+        request.scope["path"] = clean_route
     return await call_next(request)
 
 FEATURE_ORDER = [
@@ -170,15 +149,12 @@ def sanitize_csv_cell(value: str) -> str:
 
 
 @app.get("/")
-@app.post("/")
-def root_endpoint(request: Request):
-    """Debug what Vercel forwards in headers and scope."""
+def root_endpoint() -> dict[str, Any]:
+    """Serves API status."""
     return {
-        "scope_path": request.scope.get("path"),
-        "orig_path": request.scope.get("orig_path"),
-        "forwarded_path": request.scope.get("forwarded_path"),
-        "raw_path": request.scope.get("raw_path", b"").decode("latin-1", errors="ignore"),
-        "headers": dict(request.headers),
+        "service": "AquaSense AI Serverless API",
+        "status": "healthy",
+        "endpoints": ["/health", "/predict", "/explain", "/anomaly", "/models"],
     }
 
 

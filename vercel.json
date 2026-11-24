@@ -13,11 +13,15 @@
   "rewrites": [
     {
       "source": "/(health|predict|explain|anomaly|models)(.*)",
-      "destination": "/api/index.py"
+      "destination": "/api/index.py?_route=/$1$2"
     },
     {
-      "source": "/api(.*)",
-      "destination": "/api/index.py"
+      "source": "/api/(.*)",
+      "destination": "/api/index.py?_route=/$1"
+    },
+    {
+      "source": "/api",
+      "destination": "/api/index.py?_route=/health"
     }
   ]
 }
