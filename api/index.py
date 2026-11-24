@@ -138,6 +138,8 @@ def sanitize_csv_cell(value: str) -> str:
 
 
 @app.get("/health")
+@app.get("/api/health")
+@app.get("/api")
 def health_check() -> dict[str, Any]:
     """Returns server and active model health status."""
     is_model_loaded = bundle is not None
@@ -151,6 +153,7 @@ def health_check() -> dict[str, Any]:
 
 
 @app.get("/models")
+@app.get("/api/models")
 def get_model_metadata() -> dict[str, Any]:
     """Returns details and verification metrics of the active screening model."""
     if not bundle:
@@ -181,6 +184,7 @@ def get_model_metadata() -> dict[str, Any]:
 
 
 @app.post("/predict")
+@app.post("/api/predict")
 def predict_water_quality(sample: WaterSampleInput) -> dict[str, Any]:
     """
     Performs calibrated multi-class screening with Inductive Conformal Prediction set,
@@ -258,6 +262,7 @@ def predict_water_quality(sample: WaterSampleInput) -> dict[str, Any]:
 
 
 @app.post("/explain")
+@app.post("/api/explain")
 def explain_prediction(sample: WaterSampleInput) -> dict[str, Any]:
     """
     Computes local feature attribution via counterfactual occlusion against training medians.
@@ -295,6 +300,7 @@ def explain_prediction(sample: WaterSampleInput) -> dict[str, Any]:
 
 
 @app.post("/anomaly")
+@app.post("/api/anomaly")
 def audit_anomalies(sample: WaterSampleInput) -> dict[str, Any]:
     """
     Audits single sample against physical sensor boundaries and WHO/BIS statutory drinking water thresholds.
@@ -305,6 +311,7 @@ def audit_anomalies(sample: WaterSampleInput) -> dict[str, Any]:
 
 
 @app.post("/predict/batch")
+@app.post("/api/predict/batch")
 async def predict_batch_csv(file: UploadFile = File(...)) -> dict[str, Any]:
     """
     Processes batch CSV file upload with file size validation, row limits, and CSV sanitization.

@@ -5,6 +5,7 @@ Final-year AI/ML Senior Design Project. Predictions are screening support only a
 | Academic Details | Information |
 | :--- | :--- |
 | **Course** | Research Methodology (URP4201) |
+| **Department** | CSE (AI/ML) |
 | **Supervisor** | Dr. Alok Ku. Pani |
 | **Authors** | Ayusman Das (2341004073) |
 | | Selina Mohanty (2341013299) |
@@ -96,7 +97,7 @@ Screening thresholds and sensor rules are cross-referenced against authoritative
 - **Analysis Workspace (`web/analyze.html`):** 8 parameters structured into Physical, Chemical, and Heavy Metals sections. Sample ID, location, collection timestamp, tooltips, units, reset, illustrative sample buttons, CSV template download, and downloadable PDF assessment report.
 - **Batch CSV Screening (`web/batch.html`):** Multi-sample CSV upload (up to 500 rows), missing value validation, risk distribution charts, traceable row records, downloadable CSV results, and printable batch reports.
 - **Research & Metrics (`web/results.html`):** Verified metrics badges, benchmark comparison tables, 4-way partition breakdown, conformal diagnostics, and 6 diagnostic figures.
-- **Monitoring Map (`web/monitoring.html`):** Interactive map with simulated regional monitoring stations, risk-tier color coding, location filters, and custom coordinate ingestion.
+- **Monitoring Map (`web/monitoring.html`):** Interactive map centered on Bhubaneswar, Odisha across the Kuakhai-Daya river basin with 8 simulated regional monitoring stations, risk-tier color coding, location filters, and custom coordinate ingestion.
 - **About & Method (`web/about.html`):** Academic context, labeling rule audit, 4-way partition design, statutory standards table, and scientific limitations.
 - **Design System (`web/css/style.css`):** Solid neutral palette, water blue accent, deep navy typography, border radius <= 4px, zero emojis, zero em dashes, WCAG AA contrast.
 

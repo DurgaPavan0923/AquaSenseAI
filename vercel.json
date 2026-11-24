@@ -1,10 +1,8 @@
 {
   "version": 2,
-  "framework": null,
-  "buildCommand": null,
-  "outputDirectory": "web",
   "cleanUrls": true,
   "trailingSlash": false,
+  "outputDirectory": "web",
   "functions": {
     "api/index.py": {
       "maxDuration": 15,
@@ -12,25 +10,14 @@
       "excludeFiles": "{data/**,notebooks/**,results/**,outputs/**,tests/**,docs/**,app/**,src/**/train*,reports/**,artifacts/**}"
     }
   },
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(health|predict|explain|anomaly|models)(.*)",
-      "dest": "api/index.py"
+      "source": "/(health|predict|explain|anomaly|models)(.*)",
+      "destination": "/api/index.py"
     },
     {
-      "src": "/api/(.*)",
-      "dest": "api/index.py"
-    },
-    {
-      "src": "/figures/(.*)",
-      "dest": "/outputs/figures/$1"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
+      "source": "/api/(.*)",
+      "destination": "/api/index.py"
     }
   ]
 }

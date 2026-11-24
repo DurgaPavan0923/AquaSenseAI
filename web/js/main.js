@@ -27,6 +27,25 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
+// Resilient API Call Helper with /api fallback
+async function callApi(endpoint, options) {
+  let res = await fetch(`${API_BASE}${endpoint}`, options);
+  if (res.status === 404) {
+    const fallbackEndpoint = endpoint.startsWith("/api")
+      ? endpoint.replace(/^\/api/, "")
+      : `/api${endpoint}`;
+    try {
+      const fallbackRes = await fetch(`${API_BASE}${fallbackEndpoint}`, options);
+      if (fallbackRes.ok || fallbackRes.status !== 404) {
+        return fallbackRes;
+      }
+    } catch {
+      // Fallback network error; return original response
+    }
+  }
+  return res;
+}
+
 // 1. Mobile Navigation
 function setupNavigation() {
   const toggleBtn = document.getElementById("mobile-nav-btn");
@@ -249,8 +268,8 @@ function setupSinglePredictionForm() {
     }
 
     try {
-      // 1. Prediction Call
-      const predRes = await fetch(`${API_BASE}/predict`, {
+      // 1. Prediction Call with automatic API path resolution
+      const predRes = await callApi("/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -262,10 +281,10 @@ function setupSinglePredictionForm() {
       }
       const predData = await predRes.json();
 
-      // 2. Local Occlusion Attribution Call
+      // 2. Local Occlusion Attribution Call with automatic API path resolution
       let expData = null;
       try {
-        const expRes = await fetch(`${API_BASE}/explain`, {
+        const expRes = await callApi("/explain", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -516,7 +535,7 @@ function setupBatchUploadForm() {
     formData.append("file", file);
 
     try {
-      const res = await fetch(`${API_BASE}/predict/batch`, {
+      const res = await callApi("/predict/batch", {
         method: "POST",
         body: formData,
       });
@@ -703,16 +722,16 @@ function setupGeographicMap() {
   const mapElement = document.getElementById("monitoring-map");
   if (!mapElement) return;
 
-  // Realistic simulated river basin stations
+  // Realistic simulated river basin stations across Bhubaneswar, Odisha
   const stations = [
-    { id: "STN-DEL-01", name: "Upper Wazirabad Reservoir", lat: 28.7128, lng: 77.2285, tier: "Good", ph: 7.3, turb: 2.2, do: 6.9, bod: 1.6, lead: 0.004 },
-    { id: "STN-DEL-02", name: "Yamuna Barrage Station", lat: 28.6652, lng: 77.2324, tier: "Moderate", ph: 6.5, turb: 6.8, do: 4.8, bod: 3.9, lead: 0.012 },
-    { id: "STN-DEL-03", name: "Okhla Outfall Canal", lat: 28.5355, lng: 77.2882, tier: "Polluted", ph: 4.6, turb: 42.0, do: 1.8, bod: 22.0, lead: 0.048 },
-    { id: "STN-DEL-04", name: "Najafgarh Drain Confluence", lat: 28.7210, lng: 77.1950, tier: "Polluted", ph: 4.2, turb: 55.0, do: 1.2, bod: 28.5, lead: 0.055 },
-    { id: "STN-DEL-05", name: "Sonia Vihar Water Treatment Intake", lat: 28.7300, lng: 77.2650, tier: "Good", ph: 7.4, turb: 2.0, do: 7.2, bod: 1.4, lead: 0.003 },
-    { id: "STN-DEL-06", name: "ITO Bridge Monitoring Post", lat: 28.6280, lng: 77.2510, tier: "Moderate", ph: 6.3, turb: 8.5, do: 4.2, bod: 4.8, lead: 0.015 },
-    { id: "STN-DEL-07", name: "Hindon River Inflow Canal", lat: 28.6400, lng: 77.3400, tier: "Good", ph: 7.1, turb: 2.8, do: 6.6, bod: 1.9, lead: 0.005 },
-    { id: "STN-DEL-08", name: "Kalindi Kunj Downstream Sluice", lat: 28.5440, lng: 77.3100, tier: "Good", ph: 7.2, turb: 2.6, do: 6.7, bod: 1.7, lead: 0.004 },
+    { id: "STN-BBS-01", name: "Kuakhai River Barrage (North Intake)", lat: 20.3540, lng: 85.8650, tier: "Good", ph: 7.3, turb: 2.2, do: 6.9, bod: 1.6, lead: 0.004 },
+    { id: "STN-BBS-02", name: "Daya River Confluence (South Catchment)", lat: 20.2180, lng: 85.8520, tier: "Moderate", ph: 6.5, turb: 6.8, do: 4.8, bod: 3.9, lead: 0.012 },
+    { id: "STN-BBS-03", name: "Bindu Sagar Heritage Lake (Old Town)", lat: 20.2415, lng: 85.8340, tier: "Moderate", ph: 6.7, turb: 7.2, do: 4.5, bod: 4.1, lead: 0.009 },
+    { id: "STN-BBS-04", name: "Gangua Nullah Outfall Canal", lat: 20.2520, lng: 85.8610, tier: "Polluted", ph: 4.5, turb: 42.0, do: 1.8, bod: 22.0, lead: 0.048 },
+    { id: "STN-BBS-05", name: "Mancheswar Industrial Runoff Sluice", lat: 20.3150, lng: 85.8600, tier: "Polluted", ph: 4.2, turb: 52.0, do: 1.4, bod: 26.5, lead: 0.052 },
+    { id: "STN-BBS-06", name: "Chandaka Wetland & Reservoir Intake", lat: 20.3700, lng: 85.7750, tier: "Good", ph: 7.4, turb: 1.9, do: 7.3, bod: 1.3, lead: 0.003 },
+    { id: "STN-BBS-07", name: "Vani Vihar Lake Ecological Point", lat: 20.3015, lng: 85.8450, tier: "Good", ph: 7.1, turb: 2.8, do: 6.6, bod: 1.8, lead: 0.005 },
+    { id: "STN-BBS-08", name: "Daya West Canal Agricultural Inflow", lat: 20.2750, lng: 85.8050, tier: "Good", ph: 7.2, turb: 2.5, do: 6.8, bod: 1.7, lead: 0.004 },
   ];
 
   const detailBody = document.getElementById("station-detail-body");
@@ -730,7 +749,7 @@ function setupGeographicMap() {
       </div>
       <h4>${escapeHtml(stn.name)}</h4>
       <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">
-        Coordinates: ${stn.lat.toFixed(4)}, ${stn.lng.toFixed(4)} (Simulated Hydrological Monitoring Point)
+        Coordinates: ${stn.lat.toFixed(4)}, ${stn.lng.toFixed(4)} (Bhubaneswar Hydrological Monitoring Point)
       </p>
 
       <table style="font-size: 0.82rem; margin-bottom: 14px;">
@@ -750,7 +769,7 @@ function setupGeographicMap() {
   // Check if Leaflet is loaded
   if (typeof L !== "undefined") {
     try {
-      const map = L.map("monitoring-map").setView([28.6300, 77.2600], 11);
+      const map = L.map("monitoring-map").setView([20.2961, 85.8245], 12);
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 18,
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
