@@ -20,19 +20,19 @@
   <!-- Navigation Header -->
   <header class="site-header">
     <div class="header-container">
-      <a href="/index.html" class="brand-link">
-        <img src="/favicon.svg" alt="AquaSense AI Logo" class="brand-logo">
+      <a href="/index.html" class="brand-link" aria-label="AquaSense AI Homepage">
+        <img src="/favicon.svg" alt="AquaSense AI Logo" class="brand-logo" width="28" height="28">
         <span>AquaSense AI</span>
       </a>
       <button class="mobile-nav-toggle" id="mobile-nav-btn" aria-label="Toggle Navigation Menu">Menu</button>
-      <nav>
+      <nav aria-label="Main Navigation">
         <ul class="nav-links" id="nav-menu">
           <li><a href="/index.html" class="active">Home</a></li>
           <li><a href="/analyze.html">Analyze</a></li>
           <li><a href="/batch.html">Batch Screening</a></li>
-          <li><a href="/results.html">Research & Metrics</a></li>
+          <li><a href="/results.html">Research &amp; Metrics</a></li>
           <li><a href="/monitoring.html">Monitoring Map</a></li>
-          <li><a href="/about.html">About & Method</a></li>
+          <li><a href="/about.html">About &amp; Method</a></li>
         </ul>
       </nav>
     </div>
@@ -41,22 +41,98 @@
   <!-- Main Content -->
   <main class="main-content">
     
-    <!-- Hero Section -->
-    <section class="hero-box">
-      <h1>Understand Water Quality. Identify Pollution Risks. Make Informed Decisions.</h1>
-      <p class="hero-lead">
-        AquaSense AI is an explainable environmental intelligence platform that classifies water-quality samples into discrete pollution risk tiers, provides mathematically guaranteed conformal uncertainty sets, and quantifies local parameter contributions through counterfactual occlusion attribution.
-      </p>
-      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-        <a href="/analyze.html" class="btn btn-primary">Start Water Analysis</a>
-        <a href="/results.html" class="btn btn-secondary">Explore Research & Metrics</a>
-        <a href="/batch.html" class="btn btn-teal">Batch CSV Upload</a>
+    <!-- Hero Section: Modern Two-Column Layout -->
+    <section class="hero-two-col">
+      <div class="hero-content">
+        <div class="hero-badge-pill">Environmental Hydrology Intelligence</div>
+        <h1>Smarter Water Quality Analysis. Clearer Pollution Risk Insights.</h1>
+        <p class="hero-lead">
+          AquaSense AI provides calibrated multi-parameter water quality classification, inductive conformal uncertainty estimation, and local counterfactual parameter attributions to support rapid screening and early warning detection across municipal and industrial watersheds.
+        </p>
+        <div class="hero-actions">
+          <a href="/analyze.html" class="btn btn-primary">Start Water Analysis</a>
+          <a href="/results.html" class="btn btn-secondary">Explore Research</a>
+        </div>
+        <div class="hero-batch-link">
+          Need high-throughput auditing? Run <a href="/batch.html">Batch CSV Screening</a>
+        </div>
+      </div>
+
+      <div class="hero-preview-card">
+        <div class="preview-header">
+          <div class="preview-header-titles">
+            <span class="preview-title">Interactive Model Preview</span>
+            <span class="preview-subtitle">Calibrated Hydrological Screening</span>
+          </div>
+          <div class="preview-toggle-group">
+            <button class="btn btn-secondary btn-sm preview-btn active" id="preview-btn-good">Potable</button>
+            <button class="btn btn-secondary btn-sm preview-btn" id="preview-btn-mod">Runoff</button>
+            <button class="btn btn-secondary btn-sm preview-btn" id="preview-btn-poll">Effluent</button>
+          </div>
+        </div>
+
+        <div class="preview-classification-bar">
+          <span id="prev-tier-badge" class="badge badge-good">Good Risk Tier</span>
+          <span class="preview-confidence-tag">Finite-Sample Coverage: 90%</span>
+        </div>
+
+        <!-- Compact Parameter Table -->
+        <table class="preview-table">
+          <tbody>
+            <tr>
+              <td>pH</td><td id="prev-ph" style="font-weight: 600;">7.20</td>
+              <td>Turbidity</td><td id="prev-turb" style="font-weight: 600;">2.50 NTU</td>
+            </tr>
+            <tr>
+              <td>Temp</td><td id="prev-temp" style="font-weight: 600;">22.0 deg C</td>
+              <td>DO</td><td id="prev-do" style="font-weight: 600;">6.80 mg/L</td>
+            </tr>
+            <tr>
+              <td>BOD</td><td id="prev-bod" style="font-weight: 600;">1.80 mg/L</td>
+              <td>Lead</td><td id="prev-lead" style="font-weight: 600;">0.0050 mg/L</td>
+            </tr>
+            <tr>
+              <td>Mercury</td><td id="prev-merc" style="font-weight: 600;">0.0004 mg/L</td>
+              <td>Arsenic</td><td id="prev-ars" style="font-weight: 600;">0.0030 mg/L</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Calibrated Probability Bars -->
+        <div class="preview-prob-group">
+          <div class="prob-item">
+            <div class="prob-header"><span>Good Risk Tier</span><span id="prev-prob-good">98.5%</span></div>
+            <div class="prob-track"><div id="prev-bar-good" class="prob-fill-good" style="width: 98.5%;"></div></div>
+          </div>
+          <div class="prob-item">
+            <div class="prob-header"><span>Moderate Risk Tier</span><span id="prev-prob-mod">1.2%</span></div>
+            <div class="prob-track"><div id="prev-bar-mod" class="prob-fill-moderate" style="width: 1.2%;"></div></div>
+          </div>
+          <div class="prob-item">
+            <div class="prob-header"><span>Polluted Risk Tier</span><span id="prev-prob-poll">0.3%</span></div>
+            <div class="prob-track"><div id="prev-bar-poll" class="prob-fill-polluted" style="width: 0.3%;"></div></div>
+          </div>
+        </div>
+
+        <!-- Explainability Factor -->
+        <div class="preview-footer-info">
+          <div style="font-size: 0.8rem; margin-bottom: 4px;">
+            <strong>Conformal Set:</strong> <span id="prev-conformal-set">[ Good ]</span>
+          </div>
+          <div style="font-size: 0.78rem; color: var(--text-muted);">
+            <strong>Top Attribution Driver:</strong> <span id="prev-attribution">Organic Stress Ratio (BOD/DO = 0.26, well below 0.60 threshold)</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 12px;">
+          <a href="/analyze.html" class="btn btn-primary btn-sm" style="width: 100%;">Open Full Screening Workspace</a>
+        </div>
       </div>
     </section>
 
-    <!-- Key Verified Research Metrics -->
-    <section style="margin-bottom: 32px;">
-      <h2>Verified Performance Metrics</h2>
+    <!-- Model Performance & Evaluation Section -->
+    <section style="margin-bottom: 36px;">
+      <h2>Model Performance &amp; Evaluation</h2>
       <p>
         Evaluated on an independent 200-sample holdout test partition under a 4-way disjoint experimental design (50% train, 15% probability calibration, 15% conformal calibration, 20% holdout test).
       </p>
@@ -64,140 +140,255 @@
         <div class="stat-card">
           <div class="stat-value" id="stat-accuracy">99.50%</div>
           <div class="stat-label">Holdout Accuracy</div>
-          <p class="stat-subtext">200-sample test partition</p>
+          <p class="stat-subtext">Independent 200-sample test partition</p>
         </div>
         <div class="stat-card">
           <div class="stat-value" id="stat-f1">99.43%</div>
           <div class="stat-label">Macro-F1 Score</div>
-          <p class="stat-subtext">Balanced multi-class metric</p>
+          <p class="stat-subtext">Balanced multi-class performance</p>
         </div>
         <div class="stat-card">
-          <div class="stat-value" id="stat-prauc">0.9984</div>
+          <div class="stat-value" id="stat-prauc">0.9992</div>
           <div class="stat-label">Macro PR-AUC</div>
-          <p class="stat-subtext">Area under PR curve</p>
+          <p class="stat-subtext">Area under precision-recall curve</p>
         </div>
         <div class="stat-card">
           <div class="stat-value" id="stat-coverage">99.50%</div>
           <div class="stat-label">Conformal Coverage</div>
-          <p class="stat-subtext">At 90% target (avg size 1.00)</p>
+          <p class="stat-subtext">At 90% nominal target (avg size 1.00)</p>
         </div>
+      </div>
+      <div class="methodology-box">
+        <strong>Evaluation Methodology &amp; Mathematical Assumptions:</strong> All reported metrics are computed on the held-out test split (n=200). Conformal coverage guarantees hold under the statistical assumption that evaluation samples are exchangeable with the calibration partition under an identical data-generating distribution. Predictions serve as screening indicators and do not replace certified laboratory assays.
       </div>
     </section>
 
-    <!-- Interactive Dashboard Preview -->
-    <section class="card" style="margin-bottom: 32px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
-        <div>
-          <h3>Interactive Screening Preview</h3>
-          <p style="margin-bottom: 0; font-size: 0.88rem;">Select a representative hydrological benchmark to inspect live calibrated model behavior.</p>
-        </div>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <button class="btn btn-secondary btn-sm" id="preview-btn-good">Nominal Potable Sample</button>
-          <button class="btn btn-secondary btn-sm" id="preview-btn-mod">Moderate Runoff Sample</button>
-          <button class="btn btn-secondary btn-sm" id="preview-btn-poll">Industrial Effluent Sample</button>
-        </div>
-      </div>
-
-      <div class="grid-2" style="margin-bottom: 0;">
-        <div style="background-color: var(--bg-primary); padding: 18px; border-radius: 4px; border: 1px solid var(--border-subtle);">
-          <h4 style="margin-bottom: 10px; color: var(--accent);">Hydrological Measurements</h4>
-          <table style="font-size: 0.82rem;">
-            <tbody>
-              <tr><td>pH</td><td id="prev-ph" style="font-weight: 600;">7.20</td><td>Turbidity</td><td id="prev-turb" style="font-weight: 600;">2.50 NTU</td></tr>
-              <tr><td>Temperature</td><td id="prev-temp" style="font-weight: 600;">22.0 deg C</td><td>Dissolved Oxygen</td><td id="prev-do" style="font-weight: 600;">6.80 mg/L</td></tr>
-              <tr><td>BOD</td><td id="prev-bod" style="font-weight: 600;">1.80 mg/L</td><td>Lead (Pb)</td><td id="prev-lead" style="font-weight: 600;">0.0050 mg/L</td></tr>
-              <tr><td>Mercury (Hg)</td><td id="prev-merc" style="font-weight: 600;">0.0004 mg/L</td><td>Arsenic (As)</td><td id="prev-ars" style="font-weight: 600;">0.0030 mg/L</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div style="background-color: var(--bg-primary); padding: 18px; border-radius: 4px; border: 1px solid var(--border-subtle); display: flex; flex-direction: column; justify-content: space-between;">
+    <!-- Platform Capabilities Section -->
+    <section style="margin-bottom: 36px;">
+      <h2>Platform Capabilities</h2>
+      <p>Comprehensive analytical tooling designed for researchers, environmental engineers, and watershed managers.</p>
+      <div class="capability-grid">
+        
+        <!-- Capability 1 -->
+        <div class="capability-card">
           <div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-              <span id="prev-tier-badge" class="badge badge-good" style="font-size: 0.95rem; padding: 4px 12px;">Good Risk Tier</span>
-              <span style="font-size: 0.8rem; color: var(--text-muted);">Finite-Sample Coverage: 90%</span>
+            <div class="capability-icon-wrap">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
             </div>
-            
-            <div style="margin-bottom: 12px;">
-              <div class="prob-item">
-                <div class="prob-header"><span>Good Tier</span><span id="prev-prob-good">98.5%</span></div>
-                <div class="prob-track"><div id="prev-bar-good" class="prob-fill-good" style="width: 98.5%;"></div></div>
-              </div>
-              <div class="prob-item">
-                <div class="prob-header"><span>Moderate Tier</span><span id="prev-prob-mod">1.2%</span></div>
-                <div class="prob-track"><div id="prev-bar-mod" class="prob-fill-moderate" style="width: 1.2%;"></div></div>
-              </div>
-              <div class="prob-item">
-                <div class="prob-header"><span>Polluted Tier</span><span id="prev-prob-poll">0.3%</span></div>
-                <div class="prob-track"><div id="prev-bar-poll" class="prob-fill-polluted" style="width: 0.3%;"></div></div>
-              </div>
-            </div>
-
-            <p style="font-size: 0.82rem; margin-bottom: 4px;">
-              <strong>Conformal Set:</strong> <span id="prev-conformal-set">[ Good ]</span>
+            <h3 class="capability-title">Individual Water Analysis</h3>
+            <p class="capability-desc">
+              Execute immediate single-sample screening across 8 physical and chemical parameters, receiving calibrated risk probabilities and parameter violation diagnostics.
             </p>
           </div>
-          <div style="margin-top: 10px;">
-            <a href="/analyze.html" class="btn btn-primary btn-sm" style="width: 100%;">Open Full Screening Workspace</a>
+          <a href="/analyze.html" class="capability-link">
+            Launch Analysis Workspace &rarr;
+          </a>
+        </div>
+
+        <!-- Capability 2 -->
+        <div class="capability-card">
+          <div>
+            <div class="capability-icon-wrap">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+              </svg>
+            </div>
+            <h3 class="capability-title">Batch CSV Screening</h3>
+            <p class="capability-desc">
+              Upload multi-station monitoring datasets to triage hundreds of samples simultaneously, automatically flagging anomalous records and generating laboratory dispatch lists.
+            </p>
           </div>
+          <a href="/batch.html" class="capability-link">
+            Open Batch Uploader &rarr;
+          </a>
+        </div>
+
+        <!-- Capability 3 -->
+        <div class="capability-card">
+          <div>
+            <div class="capability-icon-wrap">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+            </div>
+            <h3 class="capability-title">Explainable AI &amp; Attribution</h3>
+            <p class="capability-desc">
+              Quantify parameter contributions using counterfactual occlusion attribution to measure exact risk probability shifts against median hydrological baselines.
+            </p>
+          </div>
+          <a href="/results.html" class="capability-link">
+            Review Feature Attributions &rarr;
+          </a>
+        </div>
+
+        <!-- Capability 4 -->
+        <div class="capability-card">
+          <div>
+            <div class="capability-icon-wrap">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+            <h3 class="capability-title">Statutory Anomaly Detection</h3>
+            <p class="capability-desc">
+              Compare sensor readings against authoritative WHO, BIS, US EPA, and CPCB limits to detect sensor malfunction, toxic heavy metal spikes, and acute contamination events.
+            </p>
+          </div>
+          <a href="/analyze.html" class="capability-link">
+            Inspect Statutory Limits &rarr;
+          </a>
+        </div>
+
+        <!-- Capability 5 -->
+        <div class="capability-card">
+          <div>
+            <div class="capability-icon-wrap">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <line x1="9" y1="3" x2="9" y2="21"/>
+              </svg>
+            </div>
+            <h3 class="capability-title">Conformal Uncertainty Sets</h3>
+            <p class="capability-desc">
+              Obtain distribution-free prediction sets with rigorous finite-sample coverage guarantees. Multi-class prediction sets automatically trigger secondary laboratory verification.
+            </p>
+          </div>
+          <a href="/results.html" class="capability-link">
+            View Conformal Calibration &rarr;
+          </a>
+        </div>
+
+        <!-- Capability 6 -->
+        <div class="capability-card">
+          <div>
+            <div class="capability-icon-wrap">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"/>
+                <line x1="12" y1="20" x2="12" y2="4"/>
+                <line x1="6" y1="20" x2="6" y2="14"/>
+              </svg>
+            </div>
+            <h3 class="capability-title">Research &amp; Analytics Hub</h3>
+            <p class="capability-desc">
+              Examine model ablation experiments, 5-fold cross-validation stability scores, reliability diagrams, and comprehensive dataset schema documentation.
+            </p>
+          </div>
+          <a href="/results.html" class="capability-link">
+            Explore Research Metrics &rarr;
+          </a>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Four-Step Screening Workflow -->
+    <section class="card" style="margin-bottom: 36px;">
+      <h2>Four-Step Screening Workflow</h2>
+      <p>A systematic, transparent process converting raw physicochemical measurements into validated risk assessments.</p>
+      
+      <div class="workflow-grid">
+        <div class="workflow-card">
+          <div class="workflow-step-num">1</div>
+          <h3 class="workflow-title">Enter Water Parameters</h3>
+          <p class="workflow-desc">
+            Provide 8 core indicators (pH, Turbidity, Temp, DO, BOD, Pb, Hg, As) manually or load standard environmental benchmarks.
+          </p>
+        </div>
+
+        <div class="workflow-card">
+          <div class="workflow-step-num">2</div>
+          <h3 class="workflow-title">Run AI Analysis</h3>
+          <p class="workflow-desc">
+            Domain feature pipelines calculate statutory hazard indices while the calibrated ensemble infers risk probability distributions.
+          </p>
+        </div>
+
+        <div class="workflow-card">
+          <div class="workflow-step-num">3</div>
+          <h3 class="workflow-title">Inspect Predictions</h3>
+          <p class="workflow-desc">
+            Examine risk classification, distribution-free conformal prediction sets, statutory threshold breaches, and attribution drivers.
+          </p>
+        </div>
+
+        <div class="workflow-card">
+          <div class="workflow-step-num">4</div>
+          <h3 class="workflow-title">Export Analysis Report</h3>
+          <p class="workflow-desc">
+            Generate printable assessment summaries or route flagged high-risk samples directly to certified testing laboratories.
+          </p>
         </div>
       </div>
     </section>
 
-    <!-- Platform Capabilities -->
-    <section style="margin-bottom: 32px;">
-      <h2>Platform Capabilities</h2>
-      <div class="grid-3">
-        <div class="card">
-          <h3>Calibrated Screening Tiers</h3>
+    <!-- Academic Research & Methodology -->
+    <section style="margin-bottom: 36px;">
+      <h2>Academic Research &amp; Methodology</h2>
+      <p>
+        Developed for course URP4201 Research Methodology under the supervision of Dr. Alok Ku. Pani. The project investigates the synthesis of calibrated machine learning and conformal prediction in environmental hydrology.
+      </p>
+
+      <div class="research-summary-grid">
+        <div class="research-mini-card">
+          <h4>Dataset &amp; Parameters</h4>
           <p>
-            Platt-scaled sigmoid probability calibration ensures that predicted risk probabilities accurately correspond to empirical frequencies rather than uncalibrated decision tree scores.
+            1,000 audited water samples with 8 physicochemical and heavy metal features: pH, Turbidity, Temperature, Dissolved Oxygen, BOD, Lead, Mercury, and Arsenic.
           </p>
         </div>
-        <div class="card">
-          <h3>Inductive Conformal Prediction</h3>
+
+        <div class="research-mini-card">
+          <h4>Model Methodology</h4>
           <p>
-            Constructs distribution-free prediction sets with a 90% finite-sample marginal coverage guarantee. Samples yielding multi-class prediction sets automatically flag: "Needs laboratory test."
+            Random Forest ensemble incorporating domain-engineered statutory features (BOD/DO organic stress, HMHI metal hazard index) with Platt sigmoid calibration.
           </p>
         </div>
-        <div class="card">
-          <h3>Local Occlusion Attribution</h3>
+
+        <div class="research-mini-card">
+          <h4>Evaluation Design</h4>
           <p>
-            Calculates exact probability shifts caused by counterfactual replacement of each parameter with its baseline training median, illuminating chemical drivers behind elevated risks.
+            4-way disjoint partition (50% train, 15% probability calibration, 15% conformal calibration, 20% holdout test) preventing data leakage and calibration contamination.
+          </p>
+        </div>
+
+        <div class="research-mini-card">
+          <h4>Explainability Methodology</h4>
+          <p>
+            Local counterfactual occlusion attribution measuring output probability shifts against training medians, verified for cross-fold rank stability (Spearman rho = 0.9429).
+          </p>
+        </div>
+
+        <div class="research-mini-card">
+          <h4>Conformal Uncertainty</h4>
+          <p>
+            Inductive split-conformal prediction sets guaranteeing 90% finite-sample marginal coverage on exchangeable holdout samples without distributional assumptions.
+          </p>
+        </div>
+
+        <div class="research-mini-card">
+          <h4>Research Scope &amp; Limits</h4>
+          <p>
+            Screening support tool only. Targets are derived from composite threshold intervals and do not measure microbial or emerging industrial organic contaminants.
           </p>
         </div>
       </div>
-    </section>
 
-    <!-- How It Works -->
-    <section class="card" style="margin-bottom: 32px;">
-      <h2>How AquaSense AI Works</h2>
-      <div class="grid-2" style="margin-bottom: 0;">
-        <div>
-          <h4 style="color: var(--accent);">1. Multi-Parameter Ingestion</h4>
-          <p style="font-size: 0.9rem;">
-            Captures eight essential physicochemical and toxicological indicators: pH, Turbidity, Temperature, Dissolved Oxygen, Biochemical Oxygen Demand, Lead, Mercury, and Arsenic.
-          </p>
-          <h4 style="color: var(--accent);">2. Domain Feature Engineering</h4>
-          <p style="font-size: 0.9rem;">
-            Synthesizes statutory hydrological ratios including the Organic Stress Degradation Ratio (BOD/DO), Heavy Metal Hazard Index (HMHI), and Statutory Threshold Breach Count.
-          </p>
-        </div>
-        <div>
-          <h4 style="color: var(--accent);">3. Disjoint Calibration & Conformal Sets</h4>
-          <p style="font-size: 0.9rem;">
-            Predictions pass through Platt probability calibration and conformal non-conformity thresholding calibrated on an independent holdout partition to guarantee exchangeability.
-          </p>
-          <h4 style="color: var(--accent);">4. Actionable Laboratory Triaging</h4>
-          <p style="font-size: 0.9rem;">
-            Clear decision pathways distinguish high-confidence screenings from ambiguous or sensor-fault states, routing urgent contaminated water bodies directly to accredited laboratory assays.
-          </p>
-        </div>
+      <div style="text-align: right; margin-top: 10px;">
+        <a href="/results.html" class="btn btn-secondary">Explore Complete Research Documentation &rarr;</a>
       </div>
     </section>
 
-    <!-- Environmental Applications -->
-    <section style="margin-bottom: 32px;">
+    <!-- Environmental Monitoring Applications -->
+    <section style="margin-bottom: 36px;">
       <h2>Environmental Monitoring Applications</h2>
       <div class="grid-2">
         <div class="card">
@@ -207,29 +398,29 @@
           </p>
         </div>
         <div class="card">
-          <h3>Industrial Effluent & Point-Source Tracking</h3>
+          <h3>Industrial Effluent &amp; Point-Source Tracking</h3>
           <p>
             Rapid verification of heavy metal discharges (Lead, Mercury, Arsenic) and organic loads from manufacturing complexes, ensuring strict statutory compliance with environmental standards.
           </p>
         </div>
         <div class="card">
-          <h3>Agricultural Watershed & Runoff Monitoring</h3>
+          <h3>Agricultural Watershed &amp; Runoff Monitoring</h3>
           <p>
             Detection of organic enrichment and hypoxia triggers resulting from chemical fertilizers, livestock waste runoff, and seasonal storm discharge into tributary networks.
           </p>
         </div>
         <div class="card">
-          <h3>River Basin & Wetland Ecology Conservation</h3>
+          <h3>Educational Laboratories &amp; Fieldwork</h3>
           <p>
-            Longitudinal monitoring of dissolved oxygen saturation and biochemical oxygen demand to safeguard fish habitats, aquatic macrophyte populations, and wetland biodiversity.
+            Interactive demonstration tool for environmental science and water chemistry students exploring machine learning applications in hydrological risk assessment.
           </p>
         </div>
       </div>
     </section>
 
-    <!-- Academic Information & Research Team -->
-    <section class="card" style="margin-bottom: 32px;">
-      <h2>Academic & Research Project Details</h2>
+    <!-- Academic Information & Research Team Table -->
+    <section class="card" style="margin-bottom: 36px;">
+      <h2>Academic &amp; Research Project Details</h2>
       <p>
         AquaSense AI was developed as a final-year AI/ML Senior Design Project investigating the empirical application of calibrated ensemble learning and inductive conformal prediction sets in environmental hydrology.
       </p>
@@ -262,7 +453,7 @@
             </tr>
             <tr>
               <td><strong>Dataset Source</strong></td>
-              <td>Kaggle Water Quality & Pollution Monitoring Dataset (1,000 samples, 8 input features)</td>
+              <td>Kaggle Water Quality &amp; Pollution Monitoring Dataset (1,000 samples, 8 input features)</td>
             </tr>
             <tr>
               <td><strong>Statutory Benchmarks</strong></td>
@@ -290,16 +481,25 @@
           <li><a href="/index.html">Home</a></li>
           <li><a href="/analyze.html">Water Analysis Workspace</a></li>
           <li><a href="/batch.html">Batch CSV Screening</a></li>
-          <li><a href="/results.html">Model Research & Metrics</a></li>
+          <li><a href="/results.html">Model Research &amp; Metrics</a></li>
           <li><a href="/monitoring.html">Geographic Monitoring Map</a></li>
-          <li><a href="/about.html">Methodology & Standards</a></li>
+          <li><a href="/about.html">Methodology &amp; Standards</a></li>
         </ul>
       </div>
       <div class="footer-col">
-        <div class="footer-title">Legal & Compliance</div>
+        <div class="footer-title">Research &amp; Tools</div>
+        <ul class="footer-links">
+          <li><a href="/results.html#metrics">Performance Metrics</a></li>
+          <li><a href="/results.html#conformal">Conformal Calibration</a></li>
+          <li><a href="/results.html#explainability">Local Occlusion Attributions</a></li>
+          <li><a href="/about.html#standards">Statutory Limits (WHO/BIS/EPA)</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <div class="footer-title">Legal &amp; Compliance</div>
         <ul class="footer-links">
           <li><a href="/privacy.html">Privacy Policy</a></li>
-          <li><a href="/terms.html">Terms & Conditions</a></li>
+          <li><a href="/terms.html">Terms &amp; Conditions</a></li>
           <li><a href="https://github.com/DurgaPavan0923/AquaSenseAI" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
         </ul>
       </div>

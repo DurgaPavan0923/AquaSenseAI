@@ -425,3 +425,12 @@ async def predict_batch_csv(file: UploadFile = File(...)) -> dict[str, Any]:
         "results": rows,
         "disclaimer": "Screening support only. Predictions do not replace certified laboratory environmental analysis.",
     }
+
+
+# Mount static web directory for local execution and frontend serving
+WEB_DIR = PROJECT_ROOT / "web"
+if WEB_DIR.exists():
+    from starlette.staticfiles import StaticFiles
+
+    app.mount("/", StaticFiles(directory=str(WEB_DIR), html=True), name="web_static")
+

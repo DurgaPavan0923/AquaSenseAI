@@ -51,7 +51,8 @@ function setupHomepagePreview() {
     lead: "0.0050 mg/L", merc: "0.0004 mg/L", ars: "0.0030 mg/L",
     tier: "Good Risk Tier", badge: "badge-good",
     good: "98.5%", mod: "1.2%", poll: "0.3%",
-    cSet: "[ Good ]"
+    cSet: "[ Good ]",
+    driver: "Organic Stress Ratio (BOD/DO = 0.26, well below 0.60 threshold)"
   };
 
   const sampleMod = {
@@ -59,7 +60,8 @@ function setupHomepagePreview() {
     lead: "0.0120 mg/L", merc: "0.0011 mg/L", ars: "0.0120 mg/L",
     tier: "Moderate Risk Tier", badge: "badge-moderate",
     good: "3.4%", mod: "92.1%", poll: "4.5%",
-    cSet: "[ Moderate ]"
+    cSet: "[ Moderate ]",
+    driver: "BOD Elevation (3.80 mg/L, exceeding potable baseline +0.34 impact)"
   };
 
   const samplePoll = {
@@ -67,10 +69,11 @@ function setupHomepagePreview() {
     lead: "0.0450 mg/L", merc: "0.0042 mg/L", ars: "0.0350 mg/L",
     tier: "Polluted Risk Tier", badge: "badge-polluted",
     good: "0.1%", mod: "1.8%", poll: "98.1%",
-    cSet: "[ Polluted ]"
+    cSet: "[ Polluted ]",
+    driver: "Heavy Metal Toxicity (Lead & Mercury exceed statutory threshold by 4.5x)"
   };
 
-  function updatePreview(s) {
+  function updatePreview(s, activeBtn) {
     document.getElementById("prev-ph").textContent = s.ph;
     document.getElementById("prev-turb").textContent = s.turb;
     document.getElementById("prev-temp").textContent = s.temp;
@@ -93,11 +96,21 @@ function setupHomepagePreview() {
     document.getElementById("prev-bar-poll").style.width = s.poll;
 
     document.getElementById("prev-conformal-set").textContent = s.cSet;
+
+    const driverElem = document.getElementById("prev-attribution");
+    if (driverElem) {
+      driverElem.textContent = s.driver;
+    }
+
+    [btnGood, btnMod, btnPoll].forEach(b => {
+      if (b) b.classList.remove("active");
+    });
+    if (activeBtn) activeBtn.classList.add("active");
   }
 
-  btnGood.addEventListener("click", () => updatePreview(sampleGood));
-  btnMod.addEventListener("click", () => updatePreview(sampleMod));
-  btnPoll.addEventListener("click", () => updatePreview(samplePoll));
+  btnGood.addEventListener("click", () => updatePreview(sampleGood, btnGood));
+  btnMod.addEventListener("click", () => updatePreview(sampleMod, btnMod));
+  btnPoll.addEventListener("click", () => updatePreview(samplePoll, btnPoll));
 }
 
 // 3. Single Sample Prediction Form
