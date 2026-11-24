@@ -10,12 +10,17 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
+import pytest
 from sklearn.metrics import accuracy_score, f1_score
 
 from src.aquasense.data import FEATURE_COLUMNS, TARGET_COLUMN
 from src.aquasense.uncertainty import ConformalCalibrator
 
 
+@pytest.mark.skipif(
+    not Path("data/processed/test.csv").exists(),
+    reason="Requires processed test data (data/processed/test.csv) from raw dataset",
+)
 def test_production_model_bundle_metrics():
     bundle_path = Path("models/model_bundle.joblib")
     test_path = Path("data/processed/test.csv")
